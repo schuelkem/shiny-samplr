@@ -1,6 +1,8 @@
 library(dplyr)
 library(ggplot2)
 library(hexSticker)
+library(magick)
+library(showtext)
 
 ggplot() + 
   geom_area(aes(x = x, y = y), tibble(x = seq(-4, -3, .01), y = dnorm(x)), fill = "#ffffff") + 
@@ -34,3 +36,8 @@ sticker(p,
         u_color = "#003da5",
         u_size = 4.75, 
         u_family = "Crimson Text")
+
+# make small version (120x139)
+image_read(path = "img/hexSticker.png") %>% 
+  image_scale(geometry = "120x") %>% 
+  image_write(path = "img/hexSticker_small.png")
