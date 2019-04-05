@@ -1,6 +1,9 @@
-# # https://stackoverflow.com/questions/36995142/get-the-size-of-the-window-in-shiny
+# https://stackoverflow.com/questions/36995142/get-the-size-of-the-window-in-shiny
+# withMathJax() label = HTML("$$ \\mu $$")
 
-library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(rlang)
 library(shiny)
 
 ui <- fluidPage(
@@ -13,23 +16,39 @@ ui <- fluidPage(
       navlistPanel(
         tabPanel("Population", 
                  fluidPage(
-                   selectInput(inputId = "population", label = "", choices = c("Normal", "Uniform"), selected = "Normal"), 
+                   selectInput(inputId = "population", label = "", choices = c("Normal", "Uniform", "Poisson", "Binomial", "Chi-Square", "Exponential", "Custom"), selected = "Normal"), 
                    
                    br(), 
                    
                    conditionalPanel("input.population == 'Normal'", 
-                                    numericInput(inputId = "mean", label = "mean", value = 0), 
-                                    numericInput(inputId = "sd", label = "sd", value = 1)), 
+                                    numericInput(inputId = "mean",      label = "mean",   value = 0), 
+                                    numericInput(inputId = "sd",        label = "sd",     value = 1)), 
                    
                    conditionalPanel("input.population == 'Uniform'", 
-                                    numericInput(inputId = "min", label = "min", value = 0), 
-                                    numericInput(inputId = "max", label = "max", value = 1)), 
+                                    numericInput(inputId = "min",       label = "min",    value = 0), 
+                                    numericInput(inputId = "max",       label = "max",    value = 1)), 
+                   
+                   conditionalPanel("input.population == 'Poisson'", 
+                                    numericInput(inputId = "lambda",    label = "lambda", value = 1)), 
+                   
+                   conditionalPanel("input.population == 'Binomial'", 
+                                    numericInput(inputId = "size",      label = "size",   value = 1), 
+                                    numericInput(inputId = "prob",      label = "prob",   value = 0.5)), 
+                   
+                   conditionalPanel("input.population == 'Chi-Square'", 
+                                    numericInput(inputId = "df",        label = "df",     value = 1)), 
+                   
+                   conditionalPanel("input.population == 'Exponential'", 
+                                    numericInput(inputId = "rate",      label = "rate",   value = 1)), 
+                   
+                   conditionalPanel("input.population == 'Custom'", 
+                                    textInput(inputId = "dcust",        label = "f(x)",   value = "0 <= x & x <= 1")), 
                    
                    br(), 
                    
                    fluidRow(
                      column(numericInput(inputId = "xmin", label = "from", value = -4), width = 6),
-                     column(numericInput(inputId = "xmax", label = "to", value = 4), width = 6)
+                     column(numericInput(inputId = "xmax", label = "to",   value =  4), width = 6)
                    )
                  )
         ), 
@@ -78,18 +97,33 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
+  ddist <- reactive({
+    switch(input$population, 
+           "Normal" = function(x) dnorm(x, mean = input$mean, sd = input$sd), 
+           "Uniform" = function(x) dunif(x, min = input$min, max = input$max), 
+           "Poisson" = function(x) dpois(x, lambda = input$lambda), 
+           "Binomial" = function(x) dbinom(x, size = input$size, prob = input$prob), 
+           "Chi-Square" = function(x) dchisq(x, df = input$df), 
+           "Exponential" = function(x) dexp(x, rate = input$rate), 
+           "Custom" = function(x) eval_tidy(parse_expr(input$dcust))) # TODO: sanatize input
+  })
+  
+  rdist <- reactive({
+    switch(input$population, 
+           "Normal" = function(n) rnorm(n, mean = input$mean, sd = input$sd), 
+           "Uniform" = function(n) runif(n, min = input$min, max = input$max), 
+           "Poisson" = function(n) rpois(n, lambda = input$lambda), 
+           "Binomial" = function(n) rbinom(n, size = input$size, prob = input$prob), 
+           "Chi-Square" = function(n) rchisq(n, df = input$df), 
+           "Exponential" = function(n) rexp(n, rate = input$rate), 
+           "Custom" = function(n) rnorm(n)) # TODO: sample from sanitized dcust() input (samplr::projectq3c())
+  })
   
   output$population_plot <- renderPlot({
-    if(input$population == "Normal") { 
-      ddist <- function(x) dnorm(x, mean = input$mean, sd = input$sd)
-    } else if(input$population == "Uniform") { 
-      ddist <- function(x) dunif(x, min = input$min, max = input$max)
-    }
-    
     ggplot() + 
       stat_function(aes(x = input$xmin:input$xmax), 
                     n = (input$xmax - input$xmin) * 15, 
-                    fun = ddist) + 
+                    fun = ddist()) + 
       labs(title = "Population", 
            x = "") + 
       theme(axis.title.y = element_blank(), 
@@ -99,13 +133,7 @@ server <- function(input, output, session) {
   })
   
   output$sample_plot <- renderPlot({
-    if(input$population == "Normal") {
-      rdist <- function(n) rnorm(n, mean = input$mean, sd = input$sd)
-    } else if(input$population == "Uniform") {
-      rdist <- function(n) runif(n, min = input$min, max = input$max)
-    }
-    
-    draws <- rdist(input$n_1)
+    draws <- rdist()(input$n_1)
     
     ggplot(tibble(draws), aes(x = draws)) + 
       geom_histogram() + 
@@ -118,21 +146,13 @@ server <- function(input, output, session) {
   })
   
   output$bootstrap_plot_1 <- renderPlot({
-    if(input$population == "Normal") {
-      rdist <- function(n) rnorm(n, mean = input$mean, sd = input$sd)
-    } else if(input$population == "Uniform") {
-      rdist <- function(n) runif(n, min = input$min, max = input$max)
-    }
-    
-    if(input$T_1 == "mean") {
-      s <- function(x) mean(x, trim = input$T_1.trim)
-    } else if(input$T_1 == "median") {
-      s <- function(x) median(x)
-    }
+    statistic_1 <- switch(input$T_1, 
+                          "mean" = function(x) mean(x, trim = input$T_1.trim), 
+                          "median" = function(x) median(x))
     
     replicate(input$R_1, {
-      draws <- rdist(input$n_1)
-      s(draws)
+      draws <- rdist()(input$n_1)
+      statistic_1(draws)
     }) -> simdat
     
     ggplot(tibble(simdat), aes(x = simdat)) + 
@@ -146,21 +166,13 @@ server <- function(input, output, session) {
   })
   
   output$bootstrap_plot_2 <- renderPlot({
-    if(input$population == "Normal") {
-      rdist <- function(n) rnorm(n, mean = input$mean, sd = input$sd)
-    } else if(input$population == "Uniform") {
-      rdist <- function(n) runif(n, min = input$min, max = input$max)
-    }
-    
-    if(input$T_2 == "mean") {
-      s <- function(x) mean(x, trim = input$T_1.trim)
-    } else if(input$T_2 == "median") {
-      s <- function(x) median(x)
-    }
+    statistic_2 <- switch(input$T_2, 
+                          "mean" = function(x) mean(x, trim = input$T_2.trim), 
+                          "median" = function(x) median(x))
     
     replicate(input$R_2, {
-      draws <- rdist(input$n_2)
-      s(draws)
+      draws <- rdist()(input$n_2)
+      statistic_2(draws)
     }) -> simdat
     
     ggplot(tibble(simdat), aes(x = simdat)) + 
