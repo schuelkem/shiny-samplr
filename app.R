@@ -25,7 +25,7 @@ kurtosis <- function(x) {
 }
 
 descriptives <- function(x) {
-  c(mean(x), median(x), sd(x), skew(x), kurtosis(x))
+  c(mean(x), median(x), sd(x), var(x), skew(x), kurtosis(x))
 }
 
 theme_common <- function() {
@@ -37,8 +37,8 @@ theme_common <- function() {
 ##### COMMON OBJECTS #####
 
 population_choices <- c("normal", "uniform", "poisson", "binomial", "chi-square", "exponential", "custom")
-statistic_choices <- c("mean", "median", "sd", "var", "iqr", "range", "order", "custom")
-descriptive_labels <- c("mean", "median", "sd", "skew", "kurtosis")
+statistic_choices <- c("mean", "median", "sd", "var", "var*", "iqr", "range", "order", "t", "mad", "custom")
+descriptive_labels <- c("mean", "median", "sd", "var", "skew", "kurtosis")
 
 
 
@@ -111,7 +111,6 @@ ui <- fluidPage(
                                     numericInput(inputId = "T_1.type", label = "type", value = 7, min = 1, max = 9, step = 1)), 
                    
                    conditionalPanel("input.T_1 == 'order'", 
-                                    #uiOutput(outputId = "T_1.order")
                                     numericInput(inputId = "T_1.order", label = "order", value = 1, min = 1, max = 15, step = 1)), 
                    
                    conditionalPanel("input.T_1 == 'custom'", 
@@ -128,7 +127,6 @@ ui <- fluidPage(
                                    numericInput(inputId = "T_2.type", label = "type", value = 7, min = 1, max = 9, step = 1)), 
                    
                    conditionalPanel("input.T_2 == 'order'", 
-                                    #uiOutput(outputId = "T_2.order")
                                     numericInput(inputId = "T_2.order", label = "order", value = 1, min = 1, max = 15, step = 1)), 
                    
                    conditionalPanel("input.T_2 == 'custom'", 
@@ -241,53 +239,81 @@ server <- function(input, output, session) {
   
   output$population_plot <- renderPlot({
     ggplot() + 
-      stat_function(aes(x = input$xmin:input$xmax), 
-                    n = (input$xmax - input$xmin) * 15, 
-                    fun = ddist()) + 
+      switch(input$population, 
+             "poisson" = geom_step(aes(x = x, y = y), 
+                                   tibble(x = seq(input$xmin - 1, input$xmax + 1, 1) - 0.5, 
+                                          y = dpois(x + 0.5, lambda = input$lambda)), 
+                                   color = "#337ab7"), 
+             "binomial" = geom_step(aes(x = x, y = y), 
+                                    tibble(x = seq(input$xmin - 1, input$xmax + 1, 1) - 0.5, 
+                                           y = dbinom(x + 0.5, size = input$size, input$prob)), 
+                                    color = "#337ab7"), 
+             stat_function(aes(x = input$xmin:input$xmax), 
+                           n = (input$xmax - input$xmin) * 15, 
+                           fun = ddist(), 
+                           color = "#337ab7")
+      ) + 
       labs(title = "Population", x = "") + 
       theme_common() + 
       coord_cartesian(xlim = c(input$xmin, input$xmax))
   })
   
-  output$population_descriptives <- renderPrint({
-    descriptives <- switch(input$population, 
-                "normal" = c(input$mean, 
+  # calculate population descriptive statistics such as mean, median, and standard deviation
+  # these are reported as well as used to construct some bootstrap samples (e.g., mad or t)
+  population_descriptives <- reactive({
+    switch(input$population, 
+           "normal" =      c(input$mean, 
                              input$mean, 
                              input$sd, 
+                             input$sd^2, 
                              0, 
                              0), 
-                "uniform" = c((input$min + input$max) / 2, 
-                              (input$min + input$max) / 2, 
-                              sqrt((1 / 12) * (input$max - input$min)^2), 
-                              0, 
-                              -6 / 5), 
-                "poisson" = c(input$rate, 
-                              input$rate + 1 / 3 - 0.02 / input$rate, 
-                              sqrt(input$rate), 
-                              input$rate^(-1 / 2), 
-                              1 / input$rate), 
-                "binomial" = c(input$size * input$prob, 
-                               input$size * input$prob, 
-                               sqrt(input$size * input$prob * (1 - input$prob)), 
-                               (1 - 2 * input$prob) / (sqrt(input$size * input$prob * (1 - input$prob))), 
-                               (1 - 6 * input$prob * (1 - input$prob)) / (input$size * input$prob * (1 - input$prob))), 
-                "chi-square" = c(input$df, 
-                                 input$df * (1 - 2 / (9 * input$df))^3, 
-                                 sqrt(2 * input$df), 
-                                 sqrt(8 / input$df), 
-                                 12 / input$df), 
-                "exponential" = c(1 / input$rate, 
-                                  input$rate^(-1) * log(2), 
-                                  sqrt(input$rate^(-2)), 
-                                  2, 
-                                  6), 
-                "custom" = c(NA, 
+           
+           "uniform" =     c((input$min + input$max) / 2, 
+                             (input$min + input$max) / 2, 
+                             sqrt((1 / 12) * (input$max - input$min)^2), 
+                             (1 / 12) * (input$max - input$min)^2, 
+                             0, 
+                             -6 / 5), 
+           
+           "poisson" =     c(input$rate, 
+                             input$rate + 1 / 3 - 0.02 / input$rate, 
+                             sqrt(input$rate), 
+                             input$rate, 
+                             input$rate^(-1 / 2), 
+                             1 / input$rate), 
+           
+           "binomial" =    c(input$size * input$prob, 
+                             input$size * input$prob, 
+                             sqrt(input$size * input$prob * (1 - input$prob)), 
+                             input$size * input$prob * (1 - input$prob), 
+                             (1 - 2 * input$prob) / (sqrt(input$size * input$prob * (1 - input$prob))), 
+                             (1 - 6 * input$prob * (1 - input$prob)) / (input$size * input$prob * (1 - input$prob))), 
+           
+           "chi-square" =  c(input$df, 
+                             input$df * (1 - 2 / (9 * input$df))^3, 
+                             sqrt(2 * input$df), 
+                             2 * input$df, 
+                             sqrt(8 / input$df), 
+                             12 / input$df), 
+           
+           "exponential" = c(1 / input$rate, 
+                             input$rate^(-1) * log(2), 
+                             sqrt(input$rate^(-2)), 
+                             input$rate^(-2), 
+                             2, 
+                             6), 
+           
+           "custom" =      c(NA, 
+                             NA, 
                              NA, 
                              NA, 
                              NA, 
                              NA))
-    
-    vectxt <- paste(descriptive_labels, "=", format(round(descriptives, 2), nsmall = 2))
+  })
+  
+  output$population_descriptives <- renderPrint({
+    vectxt <- paste(descriptive_labels, "=", format(round(population_descriptives(), 2), nsmall = 2))
     cat(paste(vectxt, collapse = "\n"))
   })
   
@@ -301,7 +327,7 @@ server <- function(input, output, session) {
   
   output$sample_plot <- renderPlot({
     ggplot(tibble(sample_draws()), aes(x = sample_draws())) + 
-      geom_histogram() + 
+      geom_histogram(fill = "#337ab7") + 
       labs(title = "Sample", x = "") + 
       theme_common() + 
       coord_cartesian(xlim = c(input$xmin, input$xmax))
@@ -321,9 +347,12 @@ server <- function(input, output, session) {
                           "median" = function(x) median(x), 
                           "sd" =     function(x) sd(x), 
                           "var" =    function(x) var(x), 
+                          "var*" =   function(x) (length(x) - 1) / length(x) * var(x), 
                           "iqr" =    function(x) IQR(x, type = input$T_1.type), 
                           "range" =  function(x) diff(range(x)), 
                           "order" =  function(x) sort(x)[input$T_1.order], 
+                          "t" =      function(x) t.test(x, mu = population_descriptives()[1])$statistic, 
+                          "mad" =    function(x) mad(x, center = population_descriptives()[1]), 
                           "custom" = function(x) eval_tidy(parse_expr(input$T_1.custom)))
     
     replicate(input$R_1, {
@@ -334,7 +363,7 @@ server <- function(input, output, session) {
   
   output$bootstrap_1_plot <- renderPlot({
     ggplot(tibble(bootstrap_1_draws()), aes(x = bootstrap_1_draws())) + 
-      geom_histogram() + 
+      geom_histogram(fill = "#337ab7") + 
       labs(title = "Bootstrap Distribution 1", x = "") + 
       theme_common() + 
       coord_cartesian(xlim = c(input$xmin, input$xmax))
@@ -355,9 +384,12 @@ server <- function(input, output, session) {
                           "median" = function(x) median(x), 
                           "sd" =     function(x) sd(x), 
                           "var" =    function(x) var(x), 
+                          "var*" =   function(x) (length(x) - 1) / length(x) * var(x), 
                           "iqr" =    function(x) IQR(x, type = input$T_2.type), 
                           "range" =  function(x) diff(range(x)), 
                           "order" =  function(x) sort(x)[input$T_2.order], 
+                          "t" =      function(x) t.test(x, mu = population_descriptives()[1])$statistic, 
+                          "mad" =    function(x) mad(x, center = population_descriptives()[1]), 
                           "custom" = function(x) eval_tidy(parse_expr(input$T_2.custom)))
     
     replicate(input$R_2, {
@@ -368,7 +400,7 @@ server <- function(input, output, session) {
   
   output$bootstrap_2_plot <- renderPlot({
     ggplot(tibble(bootstrap_2_draws()), aes(x = bootstrap_2_draws())) + 
-      geom_histogram() + 
+      geom_histogram(fill = "#337ab7") + 
       labs(title = "Boostrap Distribution 2", x = "") + 
       theme_common() + 
       coord_cartesian(xlim = c(input$xmin, input$xmax))
@@ -382,8 +414,6 @@ server <- function(input, output, session) {
 
 shinyApp(ui, server)
 
-# TODO: add s*^2, MAD, t (against population mean) stats
-# TODO: draw discrete distributions
 # TODO: sample from custom population
 # TODO: vertical lines
 # TODO: outliers
