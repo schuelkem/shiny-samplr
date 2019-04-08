@@ -1,13 +1,49 @@
 # https://stackoverflow.com/questions/36995142/get-the-size-of-the-window-in-shiny
 # withMathJax() label = HTML("$$ \\mu $$")
 
+##### IMPORTS #####
+
 library(dplyr)
 library(ggplot2)
 library(rlang)
 library(shiny)
 
+
+
+##### FUNCTIONS #####
+
+skew <- function(x) {
+  n <- length(x)
+  x <- scale(x, scale = FALSE)
+  sqrt(n) * sum(x^3) / (sum(x^2)^(3/2))
+}
+
+kurtosis <- function(x) {
+  n <- length(x)
+  x <- scale(x, scale = FALSE)
+  r <- n * sum(x^4) / (sum(x^2)^2) - 3
+}
+
+descriptives <- function(x) {
+  c(mean(x), median(x), sd(x), skew(x), kurtosis(x))
+}
+
+theme_common <- function() {
+  theme(axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank())
+}
+
+
+
+##### COMMON OBJECTS #####
+
 population_choices <- c("normal", "uniform", "poisson", "binomial", "chi-square", "exponential", "custom")
 statistic_choices <- c("mean", "median", "sd", "var", "iqr", "range", "order", "custom")
+descriptive_labels <- c("mean", "median", "sd", "skew", "kurtosis")
+
+
+
+
+
 
 ui <- fluidPage(
   withMathJax(), 
@@ -124,16 +160,19 @@ ui <- fluidPage(
         
         fluidRow(
           column(plotOutput(outputId = "sample_plot", height = 200), width = 10), 
+          br(), 
           column(verbatimTextOutput(outputId = "sample_descriptives"), width = 2)
         ), 
         
         fluidRow(
           column(plotOutput(outputId = "bootstrap_1_plot", height = 200), width = 10), 
+          br(), 
           column(verbatimTextOutput(outputId = "bootstrap_1_descriptives"), width = 2)
         ), 
         
         fluidRow(
           column(plotOutput(outputId = "bootstrap_2_plot", height = 200), width = 10), 
+          br(), 
           column(verbatimTextOutput(outputId = "bootstrap_2_descriptives"), width = 2)
         )
       )
@@ -142,6 +181,8 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
+  
+  ##### UPDATE INPUTS #####
   
   # if not on localhost remove "custom" option for population and both statistics
   observe({
@@ -168,6 +209,10 @@ server <- function(input, output, session) {
     updateNumericInput(session, "T_2.order", "order", value = new_value, min = 1, max = new_max, step = 1)
   })
   
+  
+  
+  ##### DISTRIBUTION FUNCTIONS #####
+  
   ddist <- reactive({
     switch(input$population, 
            "normal" =      function(x) dnorm(x, mean = input$mean, sd = input$sd), 
@@ -187,81 +232,90 @@ server <- function(input, output, session) {
            "binomial" =    function(n) rbinom(n, size = input$size, prob = input$prob), 
            "chi-square" =  function(n) rchisq(n, df = input$df), 
            "exponential" = function(n) rexp(n, rate = input$rate), 
-           "custom" =      function(n) rnorm(n)) # TODO: sample from sanitized dcust() input (samplr::projectq3c())
+           "custom" =      function(n) rnorm(n)) # TODO: sample from dcust() input (samplr::projectq3c())
   })
+  
+  
+  
+  ##### POPULATION #####
   
   output$population_plot <- renderPlot({
     ggplot() + 
       stat_function(aes(x = input$xmin:input$xmax), 
                     n = (input$xmax - input$xmin) * 15, 
                     fun = ddist()) + 
-      labs(title = "Population", 
-           x = "") + 
-      theme(axis.title.y = element_blank(), 
-            axis.text.y = element_blank(), 
-            axis.ticks.y = element_blank()) + 
+      labs(title = "Population", x = "") + 
+      theme_common() + 
       coord_cartesian(xlim = c(input$xmin, input$xmax))
   })
   
   output$population_descriptives <- renderPrint({
     descriptives <- switch(input$population, 
-                "normal" = c("mean" = input$mean, 
-                             "median" = input$mean, 
-                             "sd" = input$sd, 
-                             "skew" = 0, 
-                             "kurtosis" = 0), 
-                "uniform" = c("mean" = (input$min + input$max) / 2, 
-                              "median" = (input$min + input$max) / 2, 
-                              "sd" = sqrt((1 / 12) * (input$max - input$min)^2), 
-                              "skew" = 0, 
-                              "kurtosis" = -6 / 5), 
-                "poisson" = c("mean" = input$rate, 
-                              "median" = input$rate + 1 / 3 - 0.02 / input$rate, 
-                              "sd" = sqrt(input$rate), 
-                              "skew" = input$rate^(-1 / 2), 
-                              "kurtosis" = 1 / input$rate), 
-                "binomial" = c("mean" = input$size * input$prob, 
-                               "median" = input$size * input$prob, 
-                               "sd" = sqrt(input$size * input$prob * (1 - input$prob)), 
-                               "skew" = (1 - 2 * input$prob) / (sqrt(input$size * input$prob * (1 - input$prob))), 
-                               "kurtosis" = (1 - 6 * input$prob * (1 - input$prob)) / (input$size * input$prob * (1 - input$prob))), 
-                "chi-square" = c("mean" = input$df, 
-                                 "median" = input$df * (1 - 2 / (9 * input$df))^3, 
-                                 "sd" = sqrt(2 * input$df), 
-                                 "skew" = sqrt(8 / input$df), 
-                                 "kurtosis" = 12 / input$df), 
-                "exponential" = c("mean" = 1 / input$rate, 
-                                  "median" = input$rate^(-1) * log(2), 
-                                  "sd" = sqrt(input$rate^(-2)), 
-                                  "skew" = 2, 
-                                  "kurtosis" = 6), 
-                "custom" = c("mean" = NA, 
-                             "median" = NA, 
-                             "sd" = NA, 
-                             skew = NA, 
-                             kurtosis = NA))
+                "normal" = c(input$mean, 
+                             input$mean, 
+                             input$sd, 
+                             0, 
+                             0), 
+                "uniform" = c((input$min + input$max) / 2, 
+                              (input$min + input$max) / 2, 
+                              sqrt((1 / 12) * (input$max - input$min)^2), 
+                              0, 
+                              -6 / 5), 
+                "poisson" = c(input$rate, 
+                              input$rate + 1 / 3 - 0.02 / input$rate, 
+                              sqrt(input$rate), 
+                              input$rate^(-1 / 2), 
+                              1 / input$rate), 
+                "binomial" = c(input$size * input$prob, 
+                               input$size * input$prob, 
+                               sqrt(input$size * input$prob * (1 - input$prob)), 
+                               (1 - 2 * input$prob) / (sqrt(input$size * input$prob * (1 - input$prob))), 
+                               (1 - 6 * input$prob * (1 - input$prob)) / (input$size * input$prob * (1 - input$prob))), 
+                "chi-square" = c(input$df, 
+                                 input$df * (1 - 2 / (9 * input$df))^3, 
+                                 sqrt(2 * input$df), 
+                                 sqrt(8 / input$df), 
+                                 12 / input$df), 
+                "exponential" = c(1 / input$rate, 
+                                  input$rate^(-1) * log(2), 
+                                  sqrt(input$rate^(-2)), 
+                                  2, 
+                                  6), 
+                "custom" = c(NA, 
+                             NA, 
+                             NA, 
+                             NA, 
+                             NA))
     
-    cat(paste(paste(names(descriptives), "=", format(round(descriptives, 2), nsmall = 2)), collapse = "\n"))
+    vectxt <- paste(descriptive_labels, "=", format(round(descriptives, 2), nsmall = 2))
+    cat(paste(vectxt, collapse = "\n"))
+  })
+  
+  
+  
+  ##### SAMPLE #####
+  
+  sample_draws <- reactive({
+    rdist()(input$n_1)
   })
   
   output$sample_plot <- renderPlot({
-    draws <- rdist()(input$n_1)
-    
-    ggplot(tibble(draws), aes(x = draws)) + 
+    ggplot(tibble(sample_draws()), aes(x = sample_draws())) + 
       geom_histogram() + 
-      labs(title = "Sample", 
-           x = "") + 
-      theme(axis.title.y = element_blank(), 
-            axis.text.y = element_blank(), 
-            axis.ticks.y = element_blank()) + 
+      labs(title = "Sample", x = "") + 
+      theme_common() + 
       coord_cartesian(xlim = c(input$xmin, input$xmax))
   })
   
-  output$sample_mean <- renderText({
-    paste0("mean = ", format(round(1, 2), nsmall = 2))
+  output$sample_descriptives <- renderPrint({
+    cat(paste(paste(descriptive_labels, "=", format(round(descriptives(sample_draws()), 2), nsmall = 2)), collapse = "\n"))
   })
   
-  output$bootstrap_1_plot <- renderPlot({
+  
+  
+  ##### BOOTSTRAP 1 #####
+  
+  bootstrap_1_draws <- reactive({
     statistic_1 <- switch(input$T_1, 
                           "mean" =   function(x) mean(x, trim = input$T_1.trim), 
                           "median" = function(x) median(x), 
@@ -275,23 +329,27 @@ server <- function(input, output, session) {
     replicate(input$R_1, {
       draws <- rdist()(input$n_1)
       statistic_1(draws)
-    }) -> simdat
-    
-    ggplot(tibble(simdat), aes(x = simdat)) + 
+    })
+  })
+  
+  output$bootstrap_1_plot <- renderPlot({
+    ggplot(tibble(bootstrap_1_draws()), aes(x = bootstrap_1_draws())) + 
       geom_histogram() + 
-      labs(title = "Bootstrap Distribution 1", 
-           x = "") + 
-      theme(axis.title.y = element_blank(), 
-            axis.text.y = element_blank(), 
-            axis.ticks.y = element_blank()) + 
+      labs(title = "Bootstrap Distribution 1", x = "") + 
+      theme_common() + 
       coord_cartesian(xlim = c(input$xmin, input$xmax))
   })
   
-  output$bootstrap_1_mean <- renderText({
-    paste0("mean = ", format(round(1, 2), nsmall = 2))
+  output$bootstrap_1_descriptives <- renderPrint({
+    vectxt <- paste(descriptive_labels, "=", format(round(descriptives(bootstrap_1_draws()), 2), nsmall = 2))
+    cat(paste(vectxt, collapse = "\n"))
   })
   
-  output$bootstrap_2_plot <- renderPlot({
+  
+  
+  ##### BOOTSTRAP 2 #####
+  
+  bootstrap_2_draws <- reactive({
     statistic_2 <- switch(input$T_2, 
                           "mean" =   function(x) mean(x, trim = input$T_2.trim), 
                           "median" = function(x) median(x), 
@@ -305,21 +363,28 @@ server <- function(input, output, session) {
     replicate(input$R_2, {
       draws <- rdist()(input$n_2)
       statistic_2(draws)
-    }) -> simdat
-    
-    ggplot(tibble(simdat), aes(x = simdat)) + 
+    })
+  })
+  
+  output$bootstrap_2_plot <- renderPlot({
+    ggplot(tibble(bootstrap_2_draws()), aes(x = bootstrap_2_draws())) + 
       geom_histogram() + 
-      labs(title = "Boostrap Distribution 2", 
-           x = "") + 
-      theme(axis.title.y = element_blank(), 
-            axis.text.y = element_blank(), 
-            axis.ticks.y = element_blank()) + 
+      labs(title = "Boostrap Distribution 2", x = "") + 
+      theme_common() + 
       coord_cartesian(xlim = c(input$xmin, input$xmax))
   })
   
-  output$bootstrap_2_mean <- renderText({
-    paste0("mean = ", format(round(1, 2), nsmall = 2))
+  output$bootstrap_2_descriptives <- renderPrint({
+    vectxt <- paste(descriptive_labels, "=", format(round(descriptives(bootstrap_2_draws()), 2), nsmall = 2))
+    cat(paste(vectxt, collapse = "\n"))
   })
 }
 
 shinyApp(ui, server)
+
+# TODO: add s*^2, MAD, t (against population mean) stats
+# TODO: draw discrete distributions
+# TODO: sample from custom population
+# TODO: vertical lines
+# TODO: outliers
+# TODO: annimation
