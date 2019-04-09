@@ -40,6 +40,8 @@ population_choices <- c("normal", "uniform", "poisson", "binomial", "chi-square"
 statistic_choices <- c("mean", "median", "sd", "var", "var*", "iqr", "range", "order", "t", "mad", "custom")
 descriptive_labels <- c("mean", "median", "sd", "var", "skew", "kurtosis")
 
+defaults <- list("n.resamples" = 10)
+
 
 
 
@@ -52,96 +54,100 @@ ui <- fluidPage(
   
   sidebarLayout(
     sidebarPanel(
-      navlistPanel(
-        tabPanel("Population", 
-                 fluidPage(
-                   selectInput(inputId = "population", label = "", choices = population_choices, selected = "normal"), 
-                   
-                   br(), 
-                   
-                   conditionalPanel("input.population == 'normal'", 
-                                    numericInput(inputId = "mean", label = "mean", value = 0), 
-                                    numericInput(inputId = "sd", label = "sd", value = 1)), 
-                   
-                   conditionalPanel("input.population == 'uniform'", 
-                                    numericInput(inputId = "min", label = "min", value = 0), 
-                                    numericInput(inputId = "max", label = "max", value = 1)), 
-                   
-                   conditionalPanel("input.population == 'poisson'", 
-                                    numericInput(inputId = "lambda", label = "lambda", value = 1)), 
-                   
-                   conditionalPanel("input.population == 'binomial'", 
-                                    numericInput(inputId = "size", label = "size", value = 1), 
-                                    numericInput(inputId = "prob", label = "prob", value = 0.5)), 
-                   
-                   conditionalPanel("input.population == 'chi-square'", 
-                                    numericInput(inputId = "df", label = "df", value = 1)), 
-                   
-                   conditionalPanel("input.population == 'exponential'", 
-                                    numericInput(inputId = "rate", label = "rate", value = 1)), 
-                   
-                   conditionalPanel("input.population == 'custom' & window.location.hostname == '127.0.0.1'", 
-                                    textInput(inputId = "dcust", label = "f(x)", value = "0 <= x & x <= 1")), 
-                   
-                   br(), 
-                   
-                   fluidRow(
-                     column(numericInput(inputId = "xmin", label = "from", value = -4), width = 6),
-                     column(numericInput(inputId = "xmax", label = "to", value =  4), width = 6)
+      fluidPage(
+        navlistPanel(
+          tabPanel("Population", 
+                   fluidPage(
+                     selectInput(inputId = "population", label = "", choices = population_choices, selected = "normal"), 
+                     
+                     br(), 
+                     
+                     conditionalPanel("input.population == 'normal'", 
+                                      numericInput(inputId = "mean", label = "mean", value = 0), 
+                                      numericInput(inputId = "sd", label = "sd", value = 1)), 
+                     
+                     conditionalPanel("input.population == 'uniform'", 
+                                      numericInput(inputId = "min", label = "min", value = 0), 
+                                      numericInput(inputId = "max", label = "max", value = 1)), 
+                     
+                     conditionalPanel("input.population == 'poisson'", 
+                                      numericInput(inputId = "lambda", label = "lambda", value = 1)), 
+                     
+                     conditionalPanel("input.population == 'binomial'", 
+                                      numericInput(inputId = "size", label = "size", value = 1), 
+                                      numericInput(inputId = "prob", label = "prob", value = 0.5)), 
+                     
+                     conditionalPanel("input.population == 'chi-square'", 
+                                      numericInput(inputId = "df", label = "df", value = 1)), 
+                     
+                     conditionalPanel("input.population == 'exponential'", 
+                                      numericInput(inputId = "rate", label = "rate", value = 1)), 
+                     
+                     conditionalPanel("input.population == 'custom' & window.location.hostname == '127.0.0.1'", 
+                                      textInput(inputId = "dcust", label = "f(x)", value = "1/sqrt(2 * pi * 1^2) * exp(-(x - 0)^2 / (2 * 1^2))"))
                    )
-                 )
-        ), 
-        
-        tabPanel("Sample", 
-                 fluidPage(
-                   numericInput(inputId = "n_1", label = HTML("$$ n_1 $$"), value = 15, min = 1), 
-                   br(), 
-                   numericInput(inputId = "n_2", label = HTML("$$ n_2 $$"), value = 15, min = 1)
-                 )
-        ), 
-        
-        tabPanel("Statistic", 
-                 fluidPage(
-                   selectInput(inputId = "T_1", label = HTML("$$ T_1 $$"), choices = statistic_choices, selected = "mean"), 
-                   
-                   conditionalPanel("input.T_1 == 'mean'", 
-                                    numericInput(inputId = "T_1.trim", label = "trim", value = 0, min = 0, max = 0.5)), 
-                   
-                   conditionalPanel("input.T_1 == 'iqr'", 
-                                    numericInput(inputId = "T_1.type", label = "type", value = 7, min = 1, max = 9, step = 1)), 
-                   
-                   conditionalPanel("input.T_1 == 'order'", 
-                                    numericInput(inputId = "T_1.order", label = "order", value = 1, min = 1, max = 15, step = 1)), 
-                   
-                   conditionalPanel("input.T_1 == 'custom'", 
-                                    textInput(inputId = "T_1.custom", label = "f(x)", value = "sum(x) / length(x)")), 
-                   
-                   br(), 
-                   
-                   selectInput(inputId = "T_2", label = HTML("$$ T_2 $$"), choices = statistic_choices, selected = "mean"), 
-                   
-                   conditionalPanel("input.T_2 == 'mean'", 
-                                    numericInput(inputId = "T_2.trim", label = "trim", value = 0, min = 0, max = 0.5)), 
-                   
-                   conditionalPanel("input.T_2 == 'iqr'", 
-                                   numericInput(inputId = "T_2.type", label = "type", value = 7, min = 1, max = 9, step = 1)), 
-                   
-                   conditionalPanel("input.T_2 == 'order'", 
-                                    numericInput(inputId = "T_2.order", label = "order", value = 1, min = 1, max = 15, step = 1)), 
-                   
-                   conditionalPanel("input.T_2 == 'custom'", 
-                                    textInput(inputId = "T_2.custom", label = "f(x)", value = "sum(x) / length(x)"))
-                 )
-        ), 
-        
-        tabPanel("Resamples", 
-                 fluidPage(
-                   numericInput(inputId = "R_1", label = HTML("$$ R_1 $$"), value = 10000, min = 1, max = 10000), 
-                   
-                   br(), 
-                   
-                   numericInput(inputId = "R_2", label = HTML("$$ R_2 $$"), value = 10000, min = 1, max = 10000)
-                 )
+          ), 
+          
+          tabPanel("Sample", 
+                   fluidPage(
+                     numericInput(inputId = "n_1", label = HTML("$$ n_1 $$"), value = 15, min = 1), 
+                     br(), 
+                     numericInput(inputId = "n_2", label = HTML("$$ n_2 $$"), value = 15, min = 1)
+                   )
+          ), 
+          
+          tabPanel("Statistic", 
+                   fluidPage(
+                     selectInput(inputId = "T_1", label = HTML("$$ T_1 $$"), choices = statistic_choices, selected = "mean"), 
+                     
+                     conditionalPanel("input.T_1 == 'mean'", 
+                                      numericInput(inputId = "T_1.trim", label = "trim", value = 0, min = 0, max = 0.5)), 
+                     
+                     conditionalPanel("input.T_1 == 'iqr'", 
+                                      numericInput(inputId = "T_1.type", label = "type", value = 7, min = 1, max = 9, step = 1)), 
+                     
+                     conditionalPanel("input.T_1 == 'order'", 
+                                      numericInput(inputId = "T_1.order", label = "order", value = 1, min = 1, max = 15, step = 1)), 
+                     
+                     conditionalPanel("input.T_1 == 'custom'", 
+                                      textInput(inputId = "T_1.custom", label = "f(x)", value = "sum(x) / length(x)")), 
+                     
+                     br(), 
+                     
+                     selectInput(inputId = "T_2", label = HTML("$$ T_2 $$"), choices = statistic_choices, selected = "mean"), 
+                     
+                     conditionalPanel("input.T_2 == 'mean'", 
+                                      numericInput(inputId = "T_2.trim", label = "trim", value = 0, min = 0, max = 0.5)), 
+                     
+                     conditionalPanel("input.T_2 == 'iqr'", 
+                                      numericInput(inputId = "T_2.type", label = "type", value = 7, min = 1, max = 9, step = 1)), 
+                     
+                     conditionalPanel("input.T_2 == 'order'", 
+                                      numericInput(inputId = "T_2.order", label = "order", value = 1, min = 1, max = 15, step = 1)), 
+                     
+                     conditionalPanel("input.T_2 == 'custom'", 
+                                      textInput(inputId = "T_2.custom", label = "f(x)", value = "sum(x) / length(x)"))
+                   )
+          ), 
+          
+          tabPanel("Resamples", 
+                   fluidPage(
+                     numericInput(inputId = "R_1", label = HTML("$$ R_1 $$"), value = defaults$n.resamples, min = 1, max = 10000), 
+                     
+                     br(), 
+                     
+                     numericInput(inputId = "R_2", label = HTML("$$ R_2 $$"), value = defaults$n.resamples, min = 1, max = 10000)
+                   )
+          ), 
+          
+          tabPanel("Plot", 
+                   fluidPage(
+                     fluidRow(
+                       column(numericInput(inputId = "plot.xmin", label = "from", value = -4), width = 6),
+                       column(numericInput(inputId = "plot.xmax", label = "to", value =  4), width = 6)
+                     )
+                   )
+          )
         )
       )
     ), 
@@ -222,6 +228,32 @@ server <- function(input, output, session) {
            "custom" =      function(x) eval_tidy(parse_expr(input$dcust)))
   })
   
+  pdist <- reactive({
+    switch(input$population, 
+           "normal" =      function(q) qnorm(q, mean = input$mean, sd = input$sd), 
+           "uniform" =     function(q) qunif(q, min = input$min, max = input$max), 
+           "poisson" =     function(q) qpois(q, lambda = input$lambda), 
+           "binomial" =    function(q) qbinom(q, size = input$size, prob = input$prob), 
+           "chi-square" =  function(q) qchisq(q, df = input$df), 
+           "exponential" = function(q) qexp(q, rate = input$rate), 
+           "custom" =      function(q) integrate(f = ddist(), lower = -Inf, upper = q)$value)
+  })
+  
+  qdist <- reactive({
+    switch(input$population, 
+           "normal" =      function(p) pnorm(p, mean = input$mean, sd = input$sd), 
+           "uniform" =     function(p) punif(p, min = input$min, max = input$max), 
+           "poisson" =     function(p) ppois(p, lambda = input$lambda), 
+           "binomial" =    function(p) pbinom(p, size = input$size, prob = input$prob), 
+           "chi-square" =  function(p) pchisq(p, df = input$df), 
+           "exponential" = function(p) pexp(p, rate = input$rate), 
+           "custom" =      function(p) {
+             q.min <- -10 # TODO: find finite bounds
+             q.max <- 10  # TODO: find finite bounds
+             uniroot(f = function(x) pdist(x) - p, interval = c(q.min, q.max))$root
+             })
+  })
+  
   rdist <- reactive({
     switch(input$population, 
            "normal" =      function(n) rnorm(n, mean = input$mean, sd = input$sd), 
@@ -230,7 +262,7 @@ server <- function(input, output, session) {
            "binomial" =    function(n) rbinom(n, size = input$size, prob = input$prob), 
            "chi-square" =  function(n) rchisq(n, df = input$df), 
            "exponential" = function(n) rexp(n, rate = input$rate), 
-           "custom" =      function(n) rnorm(n)) # TODO: sample from dcust() input (samplr::projectq3c())
+           "custom" =      function(n) vapply(runif(n), qdist, numeric(1)))
   })
   
   
@@ -241,21 +273,21 @@ server <- function(input, output, session) {
     ggplot() + 
       switch(input$population, 
              "poisson" = geom_step(aes(x = x, y = y), 
-                                   tibble(x = seq(input$xmin - 1, input$xmax + 1, 1) - 0.5, 
+                                   tibble(x = seq(input$plot.xmin - 1, input$plot.xmax + 1, 1) - 0.5, 
                                           y = dpois(x + 0.5, lambda = input$lambda)), 
                                    color = "#337ab7"), 
              "binomial" = geom_step(aes(x = x, y = y), 
-                                    tibble(x = seq(input$xmin - 1, input$xmax + 1, 1) - 0.5, 
+                                    tibble(x = seq(input$plot.xmin - 1, input$plot.xmax + 1, 1) - 0.5, 
                                            y = dbinom(x + 0.5, size = input$size, input$prob)), 
                                     color = "#337ab7"), 
-             stat_function(aes(x = input$xmin:input$xmax), 
-                           n = (input$xmax - input$xmin) * 15, 
+             stat_function(aes(x = input$plot.xmin:input$plot.xmax), 
+                           n = (input$plot.xmax - input$plot.xmin) * 15, 
                            fun = ddist(), 
                            color = "#337ab7")
       ) + 
       labs(title = "Population", x = "") + 
       theme_common() + 
-      coord_cartesian(xlim = c(input$xmin, input$xmax))
+      coord_cartesian(xlim = c(input$plot.xmin, input$plot.xmax))
   })
   
   # calculate population descriptive statistics such as mean, median, and standard deviation
@@ -304,12 +336,16 @@ server <- function(input, output, session) {
                              2, 
                              6), 
            
-           "custom" =      c(NA, 
-                             NA, 
-                             NA, 
-                             NA, 
-                             NA, 
-                             NA))
+           "custom" =      c(expval_x <- integrate(f = function(x) x * ddist()(x), lower = -Inf, upper = Inf)$value, 
+                             qdist()(0.5), 
+                             {
+                               expval_xsqr <- integrate(f = function(x) x^2 * ddist()(x), lower = -Inf, upper = Inf)$value
+                               var_x <- expval_xsqr - expval_x^2
+                               sqrt(var_x)
+                             }, 
+                             var_x, 
+                             integrate(f = function(x) x^3 * ddist()(x), lower = -Inf, upper = Inf)$value, 
+                             integrate(f = function(x) x^4 * ddist()(x), lower = -Inf, upper = Inf)$value - 3))
   })
   
   output$population_descriptives <- renderPrint({
@@ -330,7 +366,7 @@ server <- function(input, output, session) {
       geom_histogram(fill = "#337ab7") + 
       labs(title = "Sample", x = "") + 
       theme_common() + 
-      coord_cartesian(xlim = c(input$xmin, input$xmax))
+      coord_cartesian(xlim = c(input$plot.xmin, input$plot.xmax))
   })
   
   output$sample_descriptives <- renderPrint({
@@ -366,7 +402,7 @@ server <- function(input, output, session) {
       geom_histogram(fill = "#337ab7") + 
       labs(title = "Bootstrap Distribution 1", x = "") + 
       theme_common() + 
-      coord_cartesian(xlim = c(input$xmin, input$xmax))
+      coord_cartesian(xlim = c(input$plot.xmin, input$plot.xmax))
   })
   
   output$bootstrap_1_descriptives <- renderPrint({
@@ -403,7 +439,7 @@ server <- function(input, output, session) {
       geom_histogram(fill = "#337ab7") + 
       labs(title = "Boostrap Distribution 2", x = "") + 
       theme_common() + 
-      coord_cartesian(xlim = c(input$xmin, input$xmax))
+      coord_cartesian(xlim = c(input$plot.xmin, input$plot.xmax))
   })
   
   output$bootstrap_2_descriptives <- renderPrint({
