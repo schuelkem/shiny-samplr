@@ -36,7 +36,7 @@ theme_common <- function() {
 
 ##### COMMON OBJECTS #####
 
-population_choices <- c("normal", "uniform", "poisson", "binomial", "chi-square", "exponential", "custom")
+population_choices <- c("beta", "binomial", "chi-square", "exponential", "gamma", "normal", "poisson", "uniform", "custom")
 statistic_choices <- c("mean", "median", "sd", "var", "var*", "iqr", "range", "order", "t", "mad", "custom")
 descriptive_labels <- c("mean", "median", "sd", "var", "skew", "kurtosis")
 
@@ -62,16 +62,9 @@ ui <- fluidPage(
                      
                      br(), 
                      
-                     conditionalPanel("input.population == 'normal'", 
-                                      numericInput(inputId = "mean", label = "mean", value = 0), 
-                                      numericInput(inputId = "sd", label = "sd", value = 1)), 
-                     
-                     conditionalPanel("input.population == 'uniform'", 
-                                      numericInput(inputId = "min", label = "min", value = 0), 
-                                      numericInput(inputId = "max", label = "max", value = 1)), 
-                     
-                     conditionalPanel("input.population == 'poisson'", 
-                                      numericInput(inputId = "lambda", label = "lambda", value = 1)), 
+                     conditionalPanel("input.population == 'beta'", 
+                                      numericInput(inputId = "shape1", label = "shape1", value = 1), 
+                                      numericInput(inputId = "shape2", label = "shape2", value = 1)), 
                      
                      conditionalPanel("input.population == 'binomial'", 
                                       numericInput(inputId = "size", label = "size", value = 1), 
@@ -82,6 +75,21 @@ ui <- fluidPage(
                      
                      conditionalPanel("input.population == 'exponential'", 
                                       numericInput(inputId = "rate", label = "rate", value = 1)), 
+                     
+                     conditionalPanel("input.population == 'gamma'", 
+                                      numericInput(inputId = "shape", label = "shape", value = 1), 
+                                      numericInput(inputId = "rate", label = "rate", value = 1)), 
+                     
+                     conditionalPanel("input.population == 'normal'", 
+                                      numericInput(inputId = "mean", label = "mean", value = 0), 
+                                      numericInput(inputId = "sd", label = "sd", value = 1)), 
+                     
+                     conditionalPanel("input.population == 'poisson'", 
+                                      numericInput(inputId = "lambda", label = "lambda", value = 1)), 
+                     
+                     conditionalPanel("input.population == 'uniform'", 
+                                      numericInput(inputId = "min", label = "min", value = 0), 
+                                      numericInput(inputId = "max", label = "max", value = 1)), 
                      
                      conditionalPanel("input.population == 'custom' & window.location.hostname == '127.0.0.1'", 
                                       textInput(inputId = "dcust", label = "f(x)", value = "1/sqrt(2 * pi * 1^2) * exp(-(x - 0)^2 / (2 * 1^2))"))
@@ -145,7 +153,20 @@ ui <- fluidPage(
                      fluidRow(
                        column(numericInput(inputId = "plot.xmin", label = "from", value = -4), width = 6),
                        column(numericInput(inputId = "plot.xmax", label = "to", value =  4), width = 6)
-                     )
+                     ), 
+                     
+                     br(), 
+                     
+                     selectInput(inputId = "n_vlines", label = "numer of vertical lines", choices = 0:3, selected = 0), 
+                     
+                     conditionalPanel("input.n_vlines > 0", 
+                                      numericInput(inputId = "vline1", label = "vline 1", value = 0)), 
+                     
+                     conditionalPanel("input.n_vlines > 1", 
+                                      numericInput(inputId = "vline2", label = "vline 2", value = 0)), 
+                     
+                     conditionalPanel("input.n_vlines > 2", 
+                                      numericInput(inputId = "vline3", label = "vline 3", value = 0))
                    )
           )
         )
@@ -213,56 +234,73 @@ server <- function(input, output, session) {
     updateNumericInput(session, "T_2.order", "order", value = new_value, min = 1, max = new_max, step = 1)
   })
   
+  ## vlines
+  vlines <- reactive({
+    switch(input$n_vlines, 
+           "0" = geom_blank(), 
+           "1" = geom_vline(xintercept = input$vline1), 
+           "2" = geom_vline(xintercept = c(input$vline1, input$vline2)), 
+           "3" = geom_vline(xintercept = c(input$vline1, input$vline2, input$vline3)))
+  })
+  
   
   
   ##### DISTRIBUTION FUNCTIONS #####
   
   ddist <- reactive({
     switch(input$population, 
-           "normal" =      function(x) dnorm(x, mean = input$mean, sd = input$sd), 
-           "uniform" =     function(x) dunif(x, min = input$min, max = input$max), 
-           "poisson" =     function(x) dpois(x, lambda = input$lambda), 
+           "beta" =        function(x) dbeta(x, shape1 = input$shape1, shape2 = input$shape2), 
            "binomial" =    function(x) dbinom(x, size = input$size, prob = input$prob), 
            "chi-square" =  function(x) dchisq(x, df = input$df), 
            "exponential" = function(x) dexp(x, rate = input$rate), 
+           "gamma" =       function(x) dgamma(x, shape = input$shape, rate = input$rate), 
+           "normal" =      function(x) dnorm(x, mean = input$mean, sd = input$sd), 
+           "poisson" =     function(x) dpois(x, lambda = input$lambda), 
+           "uniform" =     function(x) dunif(x, min = input$min, max = input$max), 
            "custom" =      function(x) eval_tidy(parse_expr(input$dcust)))
   })
   
   pdist <- reactive({
     switch(input$population, 
-           "normal" =      function(q) qnorm(q, mean = input$mean, sd = input$sd), 
-           "uniform" =     function(q) qunif(q, min = input$min, max = input$max), 
-           "poisson" =     function(q) qpois(q, lambda = input$lambda), 
-           "binomial" =    function(q) qbinom(q, size = input$size, prob = input$prob), 
-           "chi-square" =  function(q) qchisq(q, df = input$df), 
-           "exponential" = function(q) qexp(q, rate = input$rate), 
+           "beta" =        function(q) pbeta(q, shape1 = input$shape1, shape2 = input$shape2), 
+           "binomial" =    function(q) pbinom(q, size = input$size, prob = input$prob), 
+           "chi-square" =  function(q) pchisq(q, df = input$df), 
+           "exponential" = function(q) pexp(q, rate = input$rate), 
+           "gamma" =       function(q) pgamma(q, shape = input$shape, rate = input$rate), 
+           "normal" =      function(q) pnorm(q, mean = input$mean, sd = input$sd), 
+           "poisson" =     function(q) ppois(q, lambda = input$lambda), 
+           "uniform" =     function(q) punif(q, min = input$min, max = input$max), 
            "custom" =      function(q) integrate(f = ddist(), lower = -Inf, upper = q)$value)
   })
   
   qdist <- reactive({
     switch(input$population, 
-           "normal" =      function(p) pnorm(p, mean = input$mean, sd = input$sd), 
-           "uniform" =     function(p) punif(p, min = input$min, max = input$max), 
-           "poisson" =     function(p) ppois(p, lambda = input$lambda), 
+           "beta" =        function(p) pbeta(p, shape1 = input$shape1, shape2 = input$shape2), 
            "binomial" =    function(p) pbinom(p, size = input$size, prob = input$prob), 
            "chi-square" =  function(p) pchisq(p, df = input$df), 
            "exponential" = function(p) pexp(p, rate = input$rate), 
+           "gamma" =       function(p) pgamma(p, shape = input$shape, rate = input$rate), 
+           "normal" =      function(p) pnorm(p, mean = input$mean, sd = input$sd), 
+           "poisson" =     function(p) ppois(p, lambda = input$lambda), 
+           "uniform" =     function(p) punif(p, min = input$min, max = input$max), 
            "custom" =      function(p) {
              q.min <- -10 # TODO: find finite bounds
              q.max <- 10  # TODO: find finite bounds
-             uniroot(f = function(x) pdist(x) - p, interval = c(q.min, q.max))$root
+             uniroot(f = function(x) pdist()(x) - p, interval = c(q.min, q.max))$root
              })
   })
   
   rdist <- reactive({
     switch(input$population, 
-           "normal" =      function(n) rnorm(n, mean = input$mean, sd = input$sd), 
-           "uniform" =     function(n) runif(n, min = input$min, max = input$max), 
-           "poisson" =     function(n) rpois(n, lambda = input$lambda), 
+           "beta" =        function(n) rbeta(n, shape1 = input$shape1, shape2 = input$shape2), 
            "binomial" =    function(n) rbinom(n, size = input$size, prob = input$prob), 
            "chi-square" =  function(n) rchisq(n, df = input$df), 
            "exponential" = function(n) rexp(n, rate = input$rate), 
-           "custom" =      function(n) vapply(runif(n), qdist, numeric(1)))
+           "gamma" =       function(n) rgamma(n, shape = input$shape, rate = input$rate), 
+           "normal" =      function(n) rnorm(n, mean = input$mean, sd = input$sd), 
+           "poisson" =     function(n) rpois(n, lambda = input$lambda), 
+           "uniform" =     function(n) runif(n, min = input$min, max = input$max), 
+           "custom" =      function(n) vapply(runif(n), qdist(), numeric(1)))
   })
   
   
@@ -287,33 +325,23 @@ server <- function(input, output, session) {
       ) + 
       labs(title = "Population", x = "") + 
       theme_common() + 
-      coord_cartesian(xlim = c(input$plot.xmin, input$plot.xmax))
+      coord_cartesian(xlim = c(input$plot.xmin, input$plot.xmax)) + 
+      vlines()
   })
   
   # calculate population descriptive statistics such as mean, median, and standard deviation
   # these are reported as well as used to construct some bootstrap samples (e.g., mad or t)
   population_descriptives <- reactive({
     switch(input$population, 
-           "normal" =      c(input$mean, 
-                             input$mean, 
-                             input$sd, 
-                             input$sd^2, 
-                             0, 
-                             0), 
-           
-           "uniform" =     c((input$min + input$max) / 2, 
-                             (input$min + input$max) / 2, 
-                             sqrt((1 / 12) * (input$max - input$min)^2), 
-                             (1 / 12) * (input$max - input$min)^2, 
-                             0, 
-                             -6 / 5), 
-           
-           "poisson" =     c(input$rate, 
-                             input$rate + 1 / 3 - 0.02 / input$rate, 
-                             sqrt(input$rate), 
-                             input$rate, 
-                             input$rate^(-1 / 2), 
-                             1 / input$rate), 
+           "beta" =        c({ a <- input$shape1
+                               b <- input$shape2
+                               a / (a + b) }, 
+                             qdist()(0.5), 
+                             { var_x <- (a * b) / ((a + b)^2 * (a + b + 1))
+                               sqrt(var_x) }, 
+                               var_x, 
+                             (2 * (b - a) * sqrt(a + b + 1)) / ((a + b + 2) * sqrt(a * b)), 
+                             (6 * ((a - b)^2 * (a + b + 1) - a * b * (a + b + 2))) / (a * b * (a + b + 2) * (a + b + 3))), 
            
            "binomial" =    c(input$size * input$prob, 
                              input$size * input$prob, 
@@ -336,16 +364,48 @@ server <- function(input, output, session) {
                              2, 
                              6), 
            
+           "gamma" =       c({ a <- input$shape
+                               b <- input$rate
+                               a / b }, 
+                             qdist()(0.5), 
+                             { var_x <- a / b^2
+                               sqrt(var_x) }, 
+                             var_x, 
+                             2 / sqrt(a), 
+                             6 / a), 
+           
+           "normal" =      c(input$mean, 
+                             input$mean, 
+                             input$sd, 
+                             input$sd^2, 
+                             0, 
+                             0), 
+           
+           "poisson" =     c(input$rate, 
+                             input$rate + 1 / 3 - 0.02 / input$rate, 
+                             sqrt(input$rate), 
+                             input$rate, 
+                             input$rate^(-1 / 2), 
+                             1 / input$rate), 
+           
+           "uniform" =     c((input$min + input$max) / 2, 
+                             (input$min + input$max) / 2, 
+                             sqrt((1 / 12) * (input$max - input$min)^2), 
+                             (1 / 12) * (input$max - input$min)^2, 
+                             0, 
+                             -6 / 5), 
+           
            "custom" =      c(expval_x <- integrate(f = function(x) x * ddist()(x), lower = -Inf, upper = Inf)$value, 
                              qdist()(0.5), 
-                             {
-                               expval_xsqr <- integrate(f = function(x) x^2 * ddist()(x), lower = -Inf, upper = Inf)$value
-                               var_x <- expval_xsqr - expval_x^2
-                               sqrt(var_x)
-                             }, 
+                             { expval_x2 <- integrate(f = function(x) x^2 * ddist()(x), lower = -Inf, upper = Inf)$value
+                               var_x <- expval_x2 - expval_x^2
+                               sqrt(var_x) }, 
                              var_x, 
-                             integrate(f = function(x) x^3 * ddist()(x), lower = -Inf, upper = Inf)$value, 
-                             integrate(f = function(x) x^4 * ddist()(x), lower = -Inf, upper = Inf)$value - 3))
+                             { expval_x3 <- integrate(f = function(x) x^3 * ddist()(x), lower = -Inf, upper = Inf)$value
+                               (expval_x3 - 3 * expval_x * var_x - expval_x^3 ) / var_x^(3 / 2) }, 
+                             { expval_x4 <- integrate(f = function(x) x^4 * ddist()(x), lower = -Inf, upper = Inf)$value
+                               expval_x4 - 4 * expval_x3 * expval_x + 6 * expval_x2 * expval_x^2 - 4 * expval_x^4 + expval_x^4 - 3 })
+          )
   })
   
   output$population_descriptives <- renderPrint({
@@ -366,7 +426,8 @@ server <- function(input, output, session) {
       geom_histogram(fill = "#337ab7") + 
       labs(title = "Sample", x = "") + 
       theme_common() + 
-      coord_cartesian(xlim = c(input$plot.xmin, input$plot.xmax))
+      coord_cartesian(xlim = c(input$plot.xmin, input$plot.xmax)) + 
+      vlines()
   })
   
   output$sample_descriptives <- renderPrint({
@@ -402,7 +463,8 @@ server <- function(input, output, session) {
       geom_histogram(fill = "#337ab7") + 
       labs(title = "Bootstrap Distribution 1", x = "") + 
       theme_common() + 
-      coord_cartesian(xlim = c(input$plot.xmin, input$plot.xmax))
+      coord_cartesian(xlim = c(input$plot.xmin, input$plot.xmax)) + 
+      vlines()
   })
   
   output$bootstrap_1_descriptives <- renderPrint({
@@ -439,7 +501,8 @@ server <- function(input, output, session) {
       geom_histogram(fill = "#337ab7") + 
       labs(title = "Boostrap Distribution 2", x = "") + 
       theme_common() + 
-      coord_cartesian(xlim = c(input$plot.xmin, input$plot.xmax))
+      coord_cartesian(xlim = c(input$plot.xmin, input$plot.xmax)) + 
+      vlines()
   })
   
   output$bootstrap_2_descriptives <- renderPrint({
@@ -450,7 +513,6 @@ server <- function(input, output, session) {
 
 shinyApp(ui, server)
 
-# TODO: sample from custom population
-# TODO: vertical lines
+# TODO: find finite bounds
 # TODO: outliers
 # TODO: annimation
