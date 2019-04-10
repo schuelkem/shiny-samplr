@@ -284,8 +284,9 @@ server <- function(input, output, session) {
            "poisson" =     function(p) ppois(p, lambda = input$lambda), 
            "uniform" =     function(p) punif(p, min = input$min, max = input$max), 
            "custom" =      function(p) {
-             q.min <- -10 # TODO: find finite bounds
-             q.max <- 10  # TODO: find finite bounds
+             # TODO: find finite bounds (put in seperate reactive pointed at input$population to avoid repeat work)
+             q.min <- -10 ## search to left until pdist() is very close to 0
+             q.max <- 10  ## search to right until pdist() is very close to 1
              uniroot(f = function(x) pdist()(x) - p, interval = c(q.min, q.max))$root
              })
   })
@@ -333,78 +334,129 @@ server <- function(input, output, session) {
   # these are reported as well as used to construct some bootstrap samples (e.g., mad or t)
   population_descriptives <- reactive({
     switch(input$population, 
-           "beta" =        c({ a <- input$shape1
-                               b <- input$shape2
-                               a / (a + b) }, 
-                             qdist()(0.5), 
-                             { var_x <- (a * b) / ((a + b)^2 * (a + b + 1))
-                               sqrt(var_x) }, 
+           "beta" =        { 
+                             a <- input$shape1
+                             b <- input$shape2
+                             var_x <- (a * b) / ((a + b)^2 * (a + b + 1))
+                             
+                             c(a / (a + b), 
+                               qdist()(0.5), 
+                               sqrt(var_x), 
                                var_x, 
-                             (2 * (b - a) * sqrt(a + b + 1)) / ((a + b + 2) * sqrt(a * b)), 
-                             (6 * ((a - b)^2 * (a + b + 1) - a * b * (a + b + 2))) / (a * b * (a + b + 2) * (a + b + 3))), 
+                               (2 * (b - a) * sqrt(a + b + 1)) / ((a + b + 2) * sqrt(a * b)), 
+                               (6 * ((a - b)^2 * (a + b + 1) - a * b * (a + b + 2))) / (a * b * (a + b + 2) * (a + b + 3))
+                              ) 
+                           }, 
            
-           "binomial" =    c(input$size * input$prob, 
-                             input$size * input$prob, 
-                             sqrt(input$size * input$prob * (1 - input$prob)), 
-                             input$size * input$prob * (1 - input$prob), 
-                             (1 - 2 * input$prob) / (sqrt(input$size * input$prob * (1 - input$prob))), 
-                             (1 - 6 * input$prob * (1 - input$prob)) / (input$size * input$prob * (1 - input$prob))), 
+           "binomial" =    {
+                             n <- input$size
+                             p <- input$prob
+                             var_x <- n * p * (1 - p)
+                               
+                             c(n * p, 
+                               n * p, 
+                               sqrt(var_x), 
+                               var_x, 
+                               (1 - 2 * input$prob) / (sqrt(input$size * input$prob * (1 - input$prob))), 
+                               (1 - 6 * input$prob * (1 - input$prob)) / (input$size * input$prob * (1 - input$prob))
+                              )
+                           }, 
            
-           "chi-square" =  c(input$df, 
-                             input$df * (1 - 2 / (9 * input$df))^3, 
-                             sqrt(2 * input$df), 
-                             2 * input$df, 
-                             sqrt(8 / input$df), 
-                             12 / input$df), 
+           "chi-square" =  {
+                             df <- input$df
+                             var_x <- 2 * df
+                             
+                             c(df, 
+                               df * (1 - 2 / (9 * df))^3, 
+                               sqrt(var_x), 
+                               var_x, 
+                               sqrt(8 / df), 
+                               12 / df
+                             )
+                           }, 
            
-           "exponential" = c(1 / input$rate, 
-                             input$rate^(-1) * log(2), 
-                             sqrt(input$rate^(-2)), 
-                             input$rate^(-2), 
-                             2, 
-                             6), 
+           "exponential" = {
+                             rate <- input$rate
+                             var_x <- rate^(-2)
+                             
+                             c(1 / rate, 
+                               rate^(-1) * log(2), 
+                               sqrt(var_x), 
+                               var_x, 
+                               2, 
+                               6
+                             )
+                           }, 
            
-           "gamma" =       c({ a <- input$shape
-                               b <- input$rate
-                               a / b }, 
-                             qdist()(0.5), 
-                             { var_x <- a / b^2
-                               sqrt(var_x) }, 
-                             var_x, 
-                             2 / sqrt(a), 
-                             6 / a), 
+           "gamma" =       {
+                             a <- input$shape
+                             b <- input$rate
+                             var_x <- a / b^2
+                             
+                             c(a / b, 
+                               qdist()(0.5), 
+                               sqrt(var_x), 
+                               var_x, 
+                               2 / sqrt(a), 
+                               6 / a
+                             )
+                           }, 
            
-           "normal" =      c(input$mean, 
-                             input$mean, 
-                             input$sd, 
-                             input$sd^2, 
-                             0, 
-                             0), 
+           "normal" =      {
+                             mu <- input$mean
+                             var_x <- input$sd^2
+                             
+                             c(mu, 
+                               mu, 
+                               sqrt(var_x), 
+                               var_x, 
+                               0, 
+                               0
+                             )
+                           }, 
            
-           "poisson" =     c(input$rate, 
-                             input$rate + 1 / 3 - 0.02 / input$rate, 
-                             sqrt(input$rate), 
-                             input$rate, 
-                             input$rate^(-1 / 2), 
-                             1 / input$rate), 
+           "poisson" =     {
+                             rate <- input$rate
+                             var_x <- rate
+                             
+                             c(rate, 
+                               rate + 1 / 3 - 0.02 / rate, 
+                               sqrt(var_x), 
+                               var_x, 
+                               rate^(-1 / 2), 
+                               1 / rate
+                             )
+                           }, 
            
-           "uniform" =     c((input$min + input$max) / 2, 
-                             (input$min + input$max) / 2, 
-                             sqrt((1 / 12) * (input$max - input$min)^2), 
-                             (1 / 12) * (input$max - input$min)^2, 
-                             0, 
-                             -6 / 5), 
+           "uniform" =     {
+                             a <- input$min
+                             b <- input$max
+                             var_x <- (1 / 12) * (input$max - input$min)^2
+                             
+                             c((a + b) / 2, 
+                               (a + b) / 2, 
+                               sqrt(var_x), 
+                               var_x, 
+                               0, 
+                               -6 / 5
+                             )
+                           }, 
            
-           "custom" =      c(expval_x <- integrate(f = function(x) x * ddist()(x), lower = -Inf, upper = Inf)$value, 
-                             qdist()(0.5), 
-                             { expval_x2 <- integrate(f = function(x) x^2 * ddist()(x), lower = -Inf, upper = Inf)$value
-                               var_x <- expval_x2 - expval_x^2
-                               sqrt(var_x) }, 
-                             var_x, 
-                             { expval_x3 <- integrate(f = function(x) x^3 * ddist()(x), lower = -Inf, upper = Inf)$value
-                               (expval_x3 - 3 * expval_x * var_x - expval_x^3 ) / var_x^(3 / 2) }, 
-                             { expval_x4 <- integrate(f = function(x) x^4 * ddist()(x), lower = -Inf, upper = Inf)$value
-                               expval_x4 - 4 * expval_x3 * expval_x + 6 * expval_x2 * expval_x^2 - 4 * expval_x^4 + expval_x^4 - 3 })
+           "custom" =      {
+                             expval_x1 <- integrate(f = function(x) x * ddist()(x), lower = -Inf, upper = Inf)$value
+                             expval_x2 <- integrate(f = function(x) x^2 * ddist()(x), lower = -Inf, upper = Inf)$value
+                             expval_x3 <- integrate(f = function(x) x^3 * ddist()(x), lower = -Inf, upper = Inf)$value
+                             expval_x4 <- integrate(f = function(x) x^4 * ddist()(x), lower = -Inf, upper = Inf)$value
+                             var_x <- expval_x2 - expval_x1^2
+                             
+                             c(expval_x1, 
+                               qdist()(0.5), 
+                               sqrt(var_x), 
+                               var_x, 
+                               (expval_x3 - 3 * expval_x1 * var_x - expval_x1^3 ) / var_x^(3 / 2), 
+                               expval_x4 - 4 * expval_x3 * expval_x1 + 6 * expval_x2 * expval_x1^2 - 4 * expval_x1^4 + expval_x1^4 - 3
+                             )
+                           }
           )
   })
   
@@ -513,6 +565,9 @@ server <- function(input, output, session) {
 
 shinyApp(ui, server)
 
-# TODO: find finite bounds
-# TODO: outliers
+# TODO: find finite bounds and investigate approach
+# TODO: outliers (percent, num sides)
 # TODO: annimation
+
+# IDEA: custom sampling slow; allow expression rdist()?
+#                             or pre-compile massive sample and read-in from file
