@@ -8,14 +8,15 @@ qdist_inv <- function(f, q.min = -10, q.max = 10, acc = 100, lower = -Inf) {
                   function(x) {
                     uniroot(f = function(y) pdist(f, 
                                                   y, 
-                                                  lower = -Inf) - x, 
+                                                  lower = lower) - x, 
                             interval = c(q.min, q.max))$root
   })
   data.frame(x = seq(0, 1, length.out = acc)[-c(1, acc)],
              y = probs)
 }
 f <- function(x) 1/sqrt(2 * pi) * exp(-x^2/2)
-q_dist_vec <- qdist_inv(f, acc = 1000)
+f <- function(x) exp(-x)
+q_dist_vec <- qdist_inv(f, acc = 1000, lower = 0) #lower = -Inf for normal dist
 
 
 
@@ -35,5 +36,6 @@ fast_samplr <- function(f, num_samples, acc = 1000) {
 }
 
 hist(rnorm(100))
-hist(fast_samplr(f, num_samples = 100))
+hist(fast_samplr(f, num_samples = 20000))
 shapiro.test(fast_samplr(f, num_samples = 1000))
+hist(fast_samplr(f, num_samples = 20000))
