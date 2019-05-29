@@ -1,6 +1,3 @@
-# https://stackoverflow.com/questions/36995142/get-the-size-of-the-window-in-shiny
-# withMathJax() label = HTML("$$ \\mu $$")
-
 ##### IMPORTS #####
 
 library(dplyr)
@@ -36,11 +33,9 @@ theme_common <- function() {
 
 ##### COMMON OBJECTS #####
 
-population_choices <- c("beta", "binomial", "chi-square", "exponential", "gamma", "normal", "poisson", "uniform", "custom")
+population_choices <- c("beta", "binomial", "chi-square", "exponential", "gamma", "normal", "poisson", "uniform")
 statistic_choices <- c("mean", "median", "sd", "var", "var*", "iqr", "range", "order", "t", "mad", "custom")
 descriptive_labels <- c("mean", "median", "sd", "var", "skew", "kurtosis")
-
-defaults <- list("n.resamples" = 10)
 
 
 
@@ -89,18 +84,31 @@ ui <- fluidPage(
                      
                      conditionalPanel("input.population == 'uniform'", 
                                       numericInput(inputId = "min", label = "min", value = 0), 
-                                      numericInput(inputId = "max", label = "max", value = 1)), 
-                     
-                     conditionalPanel("input.population == 'custom' & window.location.hostname == '127.0.0.1'", 
-                                      textInput(inputId = "dcust", label = "f(x)", value = "1/sqrt(2 * pi * 1^2) * exp(-(x - 0)^2 / (2 * 1^2))"))
+                                      numericInput(inputId = "max", label = "max", value = 1))
                    )
           ), 
           
           tabPanel("Sample", 
                    fluidPage(
                      numericInput(inputId = "n_1", label = HTML("$$ n_1 $$"), value = 15, min = 1), 
-                     br(), 
+                     
+                     br(), br(), 
+                     
                      numericInput(inputId = "n_2", label = HTML("$$ n_2 $$"), value = 15, min = 1)
+                   )
+          ), 
+          
+          tabPanel("Outliers", 
+                   fluidPage(
+                     numericInput(inputId = "out_prop_1", label = "Proportion of Outliers 1", value = 0, min = 0, max = 1), 
+                     
+                     selectInput(inputId = "out_side_1", label = "Side", choices = c("Both", "Lower", "Upper")), 
+                     
+                     br(), br(), 
+                     
+                     numericInput(inputId = "out_prop_2", label = "Proportion of Outliers 2", value = 0, min = 0, max = 1), 
+                     
+                     selectInput(inputId = "out_side_2", label = "Side", choices = c("Both", "Lower", "Upper"))
                    )
           ), 
           
@@ -120,7 +128,7 @@ ui <- fluidPage(
                      conditionalPanel("input.T_1 == 'custom'", 
                                       textInput(inputId = "T_1.custom", label = "f(x)", value = "sum(x) / length(x)")), 
                      
-                     br(), 
+                     br(), br(), 
                      
                      selectInput(inputId = "T_2", label = HTML("$$ T_2 $$"), choices = statistic_choices, selected = "mean"), 
                      
@@ -140,24 +148,24 @@ ui <- fluidPage(
           
           tabPanel("Resamples", 
                    fluidPage(
-                     numericInput(inputId = "R_1", label = HTML("$$ R_1 $$"), value = defaults$n.resamples, min = 1, max = 10000), 
+                     numericInput(inputId = "R_1", label = HTML("$$ R_1 $$"), value = 1000, min = 1, max = 10000), 
                      
-                     br(), 
+                     br(), br(), 
                      
-                     numericInput(inputId = "R_2", label = HTML("$$ R_2 $$"), value = defaults$n.resamples, min = 1, max = 10000)
+                     numericInput(inputId = "R_2", label = HTML("$$ R_2 $$"), value = 1000, min = 1, max = 10000)
                    )
           ), 
           
           tabPanel("Plot", 
                    fluidPage(
                      fluidRow(
-                       column(numericInput(inputId = "plot.xmin", label = "from", value = -4), width = 6),
-                       column(numericInput(inputId = "plot.xmax", label = "to", value =  4), width = 6)
+                       column(numericInput(inputId = "plot.xmin", label = "From", value = -4), width = 6),
+                       column(numericInput(inputId = "plot.xmax", label = "To", value =  4), width = 6)
                      ), 
                      
                      br(), 
                      
-                     selectInput(inputId = "n_vlines", label = "numer of vertical lines", choices = 0:3, selected = 0), 
+                     selectInput(inputId = "n_vlines", label = "Number of Vertical Lines", choices = 0:3, selected = 0), 
                      
                      conditionalPanel("input.n_vlines > 0", 
                                       numericInput(inputId = "vline1", label = "vline 1", value = 0)), 
@@ -209,10 +217,9 @@ server <- function(input, output, session) {
   
   ##### UPDATE INPUTS #####
   
-  # if not on localhost remove "custom" option for population and both statistics
+  # if not on localhost remove "custom" option for both statistics
   observe({
     if(session$clientData$url_hostname != "127.0.0.1") {
-      updateSelectInput(session, "population", "", population_choices[-length(population_choices)], "normal")
       updateSelectInput(session, "T_1", "", statistic_choices[-length(statistic_choices)], "mean")
       updateSelectInput(session, "T_2", "", statistic_choices[-length(statistic_choices)], "mean")
     }
@@ -256,8 +263,7 @@ server <- function(input, output, session) {
            "gamma" =       function(x) dgamma(x, shape = input$shape, rate = input$rate), 
            "normal" =      function(x) dnorm(x, mean = input$mean, sd = input$sd), 
            "poisson" =     function(x) dpois(x, lambda = input$lambda), 
-           "uniform" =     function(x) dunif(x, min = input$min, max = input$max), 
-           "custom" =      function(x) eval_tidy(parse_expr(input$dcust)))
+           "uniform" =     function(x) dunif(x, min = input$min, max = input$max))
   })
   
   pdist <- reactive({
@@ -269,8 +275,7 @@ server <- function(input, output, session) {
            "gamma" =       function(q) pgamma(q, shape = input$shape, rate = input$rate), 
            "normal" =      function(q) pnorm(q, mean = input$mean, sd = input$sd), 
            "poisson" =     function(q) ppois(q, lambda = input$lambda), 
-           "uniform" =     function(q) punif(q, min = input$min, max = input$max), 
-           "custom" =      function(q) integrate(f = ddist(), lower = -Inf, upper = q)$value)
+           "uniform" =     function(q) punif(q, min = input$min, max = input$max))
   })
   
   qdist <- reactive({
@@ -282,13 +287,7 @@ server <- function(input, output, session) {
            "gamma" =       function(p) pgamma(p, shape = input$shape, rate = input$rate), 
            "normal" =      function(p) pnorm(p, mean = input$mean, sd = input$sd), 
            "poisson" =     function(p) ppois(p, lambda = input$lambda), 
-           "uniform" =     function(p) punif(p, min = input$min, max = input$max), 
-           "custom" =      function(p) {
-             # TODO: find finite bounds (put in seperate reactive pointed at input$population to avoid repeat work)
-             q.min <- -10 ## search to left until pdist() is very close to 0
-             q.max <- 10  ## search to right until pdist() is very close to 1
-             uniroot(f = function(x) pdist()(x) - p, interval = c(q.min, q.max))$root
-             })
+           "uniform" =     function(p) punif(p, min = input$min, max = input$max))
   })
   
   rdist <- reactive({
@@ -300,8 +299,7 @@ server <- function(input, output, session) {
            "gamma" =       function(n) rgamma(n, shape = input$shape, rate = input$rate), 
            "normal" =      function(n) rnorm(n, mean = input$mean, sd = input$sd), 
            "poisson" =     function(n) rpois(n, lambda = input$lambda), 
-           "uniform" =     function(n) runif(n, min = input$min, max = input$max), 
-           "custom" =      function(n) vapply(runif(n), qdist(), numeric(1)))
+           "uniform" =     function(n) runif(n, min = input$min, max = input$max))
   })
   
   
@@ -440,22 +438,6 @@ server <- function(input, output, session) {
                                0, 
                                -6 / 5
                              )
-                           }, 
-           
-           "custom" =      {
-                             expval_x1 <- integrate(f = function(x) x * ddist()(x), lower = -Inf, upper = Inf)$value
-                             expval_x2 <- integrate(f = function(x) x^2 * ddist()(x), lower = -Inf, upper = Inf)$value
-                             expval_x3 <- integrate(f = function(x) x^3 * ddist()(x), lower = -Inf, upper = Inf)$value
-                             expval_x4 <- integrate(f = function(x) x^4 * ddist()(x), lower = -Inf, upper = Inf)$value
-                             var_x <- expval_x2 - expval_x1^2
-                             
-                             c(expval_x1, 
-                               qdist()(0.5), 
-                               sqrt(var_x), 
-                               var_x, 
-                               (expval_x3 - 3 * expval_x1 * var_x - expval_x1^3 ) / var_x^(3 / 2), 
-                               (expval_x4 - 4 * expval_x3 * expval_x1 + 6 * expval_x2 * expval_x1^2 - 4 * expval_x1^4 + expval_x1^4) / var_x^2 - 3
-                             )
                            }
           )
   })
@@ -505,7 +487,46 @@ server <- function(input, output, session) {
                           "custom" = function(x) eval_tidy(parse_expr(input$T_1.custom)))
     
     replicate(input$R_1, {
-      draws <- rdist()(input$n_1)
+      draws <- if(input$out_prop_1 == 0) {
+        rdist()(input$n_1)
+      } else {
+        switch(input$out_side_1, 
+               "Both" = {
+                 n_out <- 2 * round(input$out_prop_1 * input$n_1 / 2)
+                 n_in <- input$n_1 - n_out
+                 draws_in <- rdist()(n_in)
+                 q <- quantile(draws_in, probs = seq(0.25, 1, 0.25))
+                 draws_out_lwr <- runif(n_out / 2, 
+                                        min = q[1] - 4.5 * (q[3] - q[1]),
+                                        max = q[1] - 1.5 * (q[3] - q[1]))
+                 draws_out_upr <- runif(n_out / 2, 
+                                        min = q[3] + 1.5 * (q[3] - q[1]), 
+                                        max = q[3] + 4.5 * (q[3] - q[1]))
+                 c(draws_out_lwr, draws_in, draws_out_upr)
+               }, 
+               "Lower" = {
+                 n_out <- round(input$out_prop_1 * input$n_1)
+                 n_in <- input$n_1 - n_out
+                 draws_in <- rdist()(n_in)
+                 q <- quantile(draws_in, probs = seq(0.25, 1, 0.25))
+                 draws_out_lwr <- runif(n_out / 2, 
+                                        min = q[1] - 4.5 * (q[3] - q[1]),
+                                        max = q[1] - 1.5 * (q[3] - q[1]))
+                 c(draws_out_lwr, draws_in)
+               }, 
+               "Upper" = {
+                 n_out <- round(input$out_prop_1 * input$n_1)
+                 n_in <- input$n_1 - n_out
+                 draws_in <- rdist()(n_in)
+                 q <- quantile(draws_in, probs = seq(0.25, 1, 0.25))
+                 draws_out_upr <- runif(n_out / 2, 
+                                        min = q[3] + 1.5 * (q[3] - q[1]), 
+                                        max = q[3] + 4.5 * (q[3] - q[1]))
+                 c(draws_in, draws_out_upr)
+               }
+               )
+      }
+      
       statistic_1(draws)
     })
   })
@@ -543,7 +564,45 @@ server <- function(input, output, session) {
                           "custom" = function(x) eval_tidy(parse_expr(input$T_2.custom)))
     
     replicate(input$R_2, {
-      draws <- rdist()(input$n_2)
+      draws <- if(input$out_prop_2 == 0) {
+        rdist()(input$n_2)
+      } else {
+        switch(input$out_side_2, 
+               "Both" = {
+                 n_out <- 2 * round(input$out_prop_2 * input$n_2 / 2)
+                 n_in <- input$n_2 - n_out
+                 draws_in <- rdist()(n_in)
+                 q <- quantile(draws_in, probs = seq(0.25, 1, 0.25))
+                 draws_out_lwr <- runif(n_out / 2, 
+                                        min = q[1] - 4.5 * (q[3] - q[1]),
+                                        max = q[1] - 1.5 * (q[3] - q[1]))
+                 draws_out_upr <- runif(n_out / 2, 
+                                        min = q[3] + 1.5 * (q[3] - q[1]), 
+                                        max = q[3] + 4.5 * (q[3] - q[1]))
+                 c(draws_out_lwr, draws_in, draws_out_upr)
+               }, 
+               "Lower" = {
+                 n_out <- round(input$out_prop_2 * input$n_2)
+                 n_in <- input$n_2 - n_out
+                 draws_in <- rdist()(n_in)
+                 q <- quantile(draws_in, probs = seq(0.25, 1, 0.25))
+                 draws_out_lwr <- runif(n_out / 2, 
+                                        min = q[1] - 4.5 * (q[3] - q[1]),
+                                        max = q[1] - 1.5 * (q[3] - q[1]))
+                 c(draws_out_lwr, draws_in)
+               }, 
+               "Upper" = {
+                 n_out <- round(input$out_prop_2 * input$n_2)
+                 n_in <- input$n_2 - n_out
+                 draws_in <- rdist()(n_in)
+                 q <- quantile(draws_in, probs = seq(0.25, 1, 0.25))
+                 draws_out_upr <- runif(n_out / 2, 
+                                        min = q[3] + 1.5 * (q[3] - q[1]), 
+                                        max = q[3] + 4.5 * (q[3] - q[1]))
+                 c(draws_in, draws_out_upr)
+               }
+        )
+      }
       statistic_2(draws)
     })
   })
@@ -564,10 +623,3 @@ server <- function(input, output, session) {
 }
 
 shinyApp(ui, server)
-
-# TODO: find finite bounds and investigate approach
-# TODO: outliers (percent, num sides)
-# TODO: annimation
-
-# IDEA: custom sampling slow; allow expression rdist()?
-#                             or pre-compile massive sample and read-in from file
