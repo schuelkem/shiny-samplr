@@ -33,7 +33,7 @@ theme_common <- function() {
 
 ##### COMMON OBJECTS #####
 
-population_choices <- c("beta", "binomial", "chi-square", "exponential", "gamma", "normal", "poisson", "uniform")
+population_choices <- c("beta", "binomial", "chi-square", "exponential", "gamma", "normal", "poisson", "t", "uniform")
 statistic_choices <- c("mean", "median", "sd", "var", "var*", "iqr", "range", "order", "t", "mad", "custom")
 descriptive_labels <- c("mean", "median", "sd", "var", "skew", "kurtosis")
 
@@ -81,6 +81,9 @@ ui <- fluidPage(
                      
                      conditionalPanel("input.population == 'poisson'", 
                                       numericInput(inputId = "lambda", label = "lambda", value = 1)), 
+                     
+                     conditionalPanel("input.population == 't'", 
+                                      numericInput(inputId = "t_df", label = "df", value = 1)), 
                      
                      conditionalPanel("input.population == 'uniform'", 
                                       numericInput(inputId = "min", label = "min", value = 0), 
@@ -178,7 +181,7 @@ ui <- fluidPage(
                    )
           )
         )
-      )
+      ), width = 3
     ), 
     
     mainPanel(
@@ -208,7 +211,7 @@ ui <- fluidPage(
           br(), 
           column(verbatimTextOutput(outputId = "bootstrap_2_descriptives"), width = 2)
         )
-      )
+      ), width = 9
     )
   )
 )
@@ -263,6 +266,7 @@ server <- function(input, output, session) {
            "gamma" =       function(x) dgamma(x, shape = input$shape, rate = input$rate), 
            "normal" =      function(x) dnorm(x, mean = input$mean, sd = input$sd), 
            "poisson" =     function(x) dpois(x, lambda = input$lambda), 
+           "t" =           function(x) dt(x, df = input$t_df), 
            "uniform" =     function(x) dunif(x, min = input$min, max = input$max))
   })
   
@@ -275,19 +279,21 @@ server <- function(input, output, session) {
            "gamma" =       function(q) pgamma(q, shape = input$shape, rate = input$rate), 
            "normal" =      function(q) pnorm(q, mean = input$mean, sd = input$sd), 
            "poisson" =     function(q) ppois(q, lambda = input$lambda), 
+           "t" =           function(q) pt(q, df = input$t_df), 
            "uniform" =     function(q) punif(q, min = input$min, max = input$max))
   })
   
   qdist <- reactive({
     switch(input$population, 
-           "beta" =        function(p) pbeta(p, shape1 = input$shape1, shape2 = input$shape2), 
-           "binomial" =    function(p) pbinom(p, size = input$size, prob = input$prob), 
-           "chi-square" =  function(p) pchisq(p, df = input$df), 
-           "exponential" = function(p) pexp(p, rate = input$rate), 
-           "gamma" =       function(p) pgamma(p, shape = input$shape, rate = input$rate), 
-           "normal" =      function(p) pnorm(p, mean = input$mean, sd = input$sd), 
-           "poisson" =     function(p) ppois(p, lambda = input$lambda), 
-           "uniform" =     function(p) punif(p, min = input$min, max = input$max))
+           "beta" =        function(p) qbeta(p, shape1 = input$shape1, shape2 = input$shape2), 
+           "binomial" =    function(p) qbinom(p, size = input$size, prob = input$prob), 
+           "chi-square" =  function(p) qchisq(p, df = input$df), 
+           "exponential" = function(p) qexp(p, rate = input$rate), 
+           "gamma" =       function(p) qgamma(p, shape = input$shape, rate = input$rate), 
+           "normal" =      function(p) qnorm(p, mean = input$mean, sd = input$sd), 
+           "poisson" =     function(p) qpois(p, lambda = input$lambda), 
+           "t" =           function(p) qt(p, df = input$t_df), 
+           "uniform" =     function(p) qunif(p, min = input$min, max = input$max))
   })
   
   rdist <- reactive({
@@ -299,6 +305,7 @@ server <- function(input, output, session) {
            "gamma" =       function(n) rgamma(n, shape = input$shape, rate = input$rate), 
            "normal" =      function(n) rnorm(n, mean = input$mean, sd = input$sd), 
            "poisson" =     function(n) rpois(n, lambda = input$lambda), 
+           "t" =           function(n) rt(n, df = input$t_df), 
            "uniform" =     function(n) runif(n, min = input$min, max = input$max))
   })
   
@@ -425,6 +432,21 @@ server <- function(input, output, session) {
                                1 / rate
                              )
                            }, 
+           
+           "t" =           {
+                             v <- input$t_df
+                             var_x <- ifelse(v > 2, 
+                                             v / (v - 2), 
+                                             ifelse(v > 1, Inf, NA))
+                             
+                             c(ifelse(v > 1, 0, NA), 
+                               0, 
+                               sqrt(var_x), 
+                               var_x, 
+                               ifelse(v > 3, 0, NA), 
+                               ifelse(v > 4, 6 / (v - 4), ifelse(v > 2, Inf, NA))
+                             )
+           }, 
            
            "uniform" =     {
                              a <- input$min
