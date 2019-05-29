@@ -107,11 +107,23 @@ ui <- fluidPage(
                      
                      selectInput(inputId = "out_side_1", label = "Side", choices = c("Both", "Lower", "Upper")), 
                      
+                     br(), 
+                     
+                     numericInput(inputId = "out_single_value_1", label = "Single Outlier Value 1", value = 1000), 
+                     
+                     numericInput(inputId = "out_single_prob_1", label = "Probability of Inclusion", value = 0, min = 0, max = 1), 
+                     
                      br(), br(), 
                      
                      numericInput(inputId = "out_prop_2", label = "Proportion of Outliers 2", value = 0, min = 0, max = 1), 
                      
-                     selectInput(inputId = "out_side_2", label = "Side", choices = c("Both", "Lower", "Upper"))
+                     selectInput(inputId = "out_side_2", label = "Side", choices = c("Both", "Lower", "Upper")), 
+                     
+                     br(), 
+                     
+                     numericInput(inputId = "out_single_value_2", label = "Single Outlier Value 2", value = 1000), 
+                     
+                     numericInput(inputId = "out_single_prob_2", label = "Probability of Inclusion", value = 0, min = 0, max = 1)
                    )
           ), 
           
@@ -549,6 +561,9 @@ server <- function(input, output, session) {
                )
       }
       
+      if(runif(1) < input$out_single_prob_1)
+        draws[sample(length(draws), 1)] <- input$out_single_value_1
+      
       statistic_1(draws)
     })
   })
@@ -625,6 +640,10 @@ server <- function(input, output, session) {
                }
         )
       }
+      
+      if(runif(1) < input$out_single_prob_2)
+        draws[sample(length(draws), 1)] <- input$out_single_value_2
+      
       statistic_2(draws)
     })
   })
