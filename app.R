@@ -454,7 +454,7 @@ server <- function(input, output, session) {
                                sqrt(var_x), 
                                var_x, 
                                (expval_x3 - 3 * expval_x1 * var_x - expval_x1^3 ) / var_x^(3 / 2), 
-                               expval_x4 - 4 * expval_x3 * expval_x1 + 6 * expval_x2 * expval_x1^2 - 4 * expval_x1^4 + expval_x1^4 - 3
+                               (expval_x4 - 4 * expval_x3 * expval_x1 + 6 * expval_x2 * expval_x1^2 - 4 * expval_x1^4 + expval_x1^4) / var_x^2 - 3
                              )
                            }
           )
