@@ -33,7 +33,7 @@ theme_common <- function() {
 
 ##### COMMON OBJECTS #####
 
-population_choices <- c("beta", "binomial", "chi-square", "exponential", "gamma", "normal", "poisson", "t", "uniform")
+pop_choices <- c("beta", "binomial", "chi-square", "exponential", "gamma", "normal", "poisson", "t", "uniform")
 statistic_choices <- c("mean", "median", "sd", "var", "var*", "iqr", "range", "order", "t", "mad", "custom")
 descriptive_labels <- c("mean", "median", "sd", "var", "skew", "kurtosis")
 
@@ -53,41 +53,75 @@ ui <- fluidPage(
         navlistPanel(
           tabPanel("Population", 
                    fluidPage(
-                     selectInput(inputId = "population", label = "", choices = population_choices, selected = "normal"), 
+                     selectInput(inputId = "pop_1", label = "Population 1", choices = pop_choices, selected = "normal"), 
                      
-                     br(), 
+                     conditionalPanel("input.pop_1 == 'beta'", 
+                                      numericInput(inputId = "pop_1__beta_shape1", label = "shape1", value = 1), 
+                                      numericInput(inputId = "pop_1_beta_shape2", label = "shape2", value = 1)), 
                      
-                     conditionalPanel("input.population == 'beta'", 
-                                      numericInput(inputId = "shape1", label = "shape1", value = 1), 
-                                      numericInput(inputId = "shape2", label = "shape2", value = 1)), 
+                     conditionalPanel("input.pop_1 == 'binomial'", 
+                                      numericInput(inputId = "pop_1_binom_size", label = "size", value = 1), 
+                                      numericInput(inputId = "pop_1_binom_prob", label = "prob", value = 0.5)), 
                      
-                     conditionalPanel("input.population == 'binomial'", 
-                                      numericInput(inputId = "size", label = "size", value = 1), 
-                                      numericInput(inputId = "prob", label = "prob", value = 0.5)), 
+                     conditionalPanel("input.pop_1 == 'chi-square'", 
+                                      numericInput(inputId = "pop_1_chisq_df", label = "df", value = 1)), 
                      
-                     conditionalPanel("input.population == 'chi-square'", 
-                                      numericInput(inputId = "df", label = "df", value = 1)), 
+                     conditionalPanel("input.pop_1 == 'exponential'", 
+                                      numericInput(inputId = "pop_1_exp_rate", label = "rate", value = 1)), 
                      
-                     conditionalPanel("input.population == 'exponential'", 
-                                      numericInput(inputId = "rate", label = "rate", value = 1)), 
+                     conditionalPanel("input.pop_1 == 'gamma'", 
+                                      numericInput(inputId = "pop_1_gamma_shape", label = "shape", value = 1), 
+                                      numericInput(inputId = "pop_1_gamma_rate", label = "rate", value = 1)), 
                      
-                     conditionalPanel("input.population == 'gamma'", 
-                                      numericInput(inputId = "shape", label = "shape", value = 1), 
-                                      numericInput(inputId = "rate", label = "rate", value = 1)), 
+                     conditionalPanel("input.pop_1 == 'normal'", 
+                                      numericInput(inputId = "pop_1_norm_mean", label = "mean", value = 0), 
+                                      numericInput(inputId = "pop_1_norm_sd", label = "sd", value = 1)), 
                      
-                     conditionalPanel("input.population == 'normal'", 
-                                      numericInput(inputId = "mean", label = "mean", value = 0), 
-                                      numericInput(inputId = "sd", label = "sd", value = 1)), 
+                     conditionalPanel("input.pop_1 == 'poisson'", 
+                                      numericInput(inputId = "pop_1_pois_lambda", label = "lambda", value = 1)), 
                      
-                     conditionalPanel("input.population == 'poisson'", 
-                                      numericInput(inputId = "lambda", label = "lambda", value = 1)), 
+                     conditionalPanel("input.pop_1 == 't'", 
+                                      numericInput(inputId = "pop_1_t_df", label = "df", value = 1)), 
                      
-                     conditionalPanel("input.population == 't'", 
-                                      numericInput(inputId = "t_df", label = "df", value = 1)), 
+                     conditionalPanel("input.pop_1 == 'uniform'", 
+                                      numericInput(inputId = "pop_1_unif_min", label = "min", value = 0), 
+                                      numericInput(inputId = "pop_1_unif_max", label = "max", value = 1)), 
                      
-                     conditionalPanel("input.population == 'uniform'", 
-                                      numericInput(inputId = "min", label = "min", value = 0), 
-                                      numericInput(inputId = "max", label = "max", value = 1))
+                     br(), br(), 
+                     
+                     selectInput(inputId = "pop_2", label = "Population 2", choices = pop_choices, selected = "normal"), 
+                     
+                     conditionalPanel("input.pop_2 == 'beta'", 
+                                      numericInput(inputId = "pop_2_beta_shape1", label = "shape1", value = 1), 
+                                      numericInput(inputId = "pop_2_beta_shape2", label = "shape2", value = 1)), 
+                     
+                     conditionalPanel("input.pop_2 == 'binomial'", 
+                                      numericInput(inputId = "pop_2_binom_size", label = "size", value = 1), 
+                                      numericInput(inputId = "pop_2_binom_prob", label = "prob", value = 0.5)), 
+                     
+                     conditionalPanel("input.pop_2 == 'chi-square'", 
+                                      numericInput(inputId = "pop_2_chisq_df", label = "df", value = 1)), 
+                     
+                     conditionalPanel("input.pop_2 == 'exponential'", 
+                                      numericInput(inputId = "pop_2_exp_rate", label = "rate", value = 1)), 
+                     
+                     conditionalPanel("input.pop_2 == 'gamma'", 
+                                      numericInput(inputId = "pop_2_gamma_shape", label = "shape", value = 1), 
+                                      numericInput(inputId = "pop_2_gamma_rate", label = "rate", value = 1)), 
+                     
+                     conditionalPanel("input.pop_2 == 'normal'", 
+                                      numericInput(inputId = "pop_2_norm_mean", label = "mean", value = 0), 
+                                      numericInput(inputId = "pop_2_norm_sd", label = "sd", value = 1)), 
+                     
+                     conditionalPanel("input.pop_2 == 'poisson'", 
+                                      numericInput(inputId = "pop_2_pois_lambda", label = "lambda", value = 1)), 
+                     
+                     conditionalPanel("input.pop_2 == 't'", 
+                                      numericInput(inputId = "pop_2_t_df", label = "df", value = 1)), 
+                     
+                     conditionalPanel("input.pop_2 == 'uniform'", 
+                                      numericInput(inputId = "pop_2_unif_min", label = "min", value = 0), 
+                                      numericInput(inputId = "pop_2_unif_max", label = "max", value = 1))
                    )
           ), 
           
@@ -197,32 +231,48 @@ ui <- fluidPage(
     ), 
     
     mainPanel(
-      fluidPage(
-        fluidRow(
-          column(plotOutput(outputId = "population_plot", height = 200), width = 10), 
-          column(
+      splitLayout(
+        
+        fluidPage(
+          fluidRow(
+            column(plotOutput(outputId = "pop_1_plot", height = 200), width = 8), 
             br(), 
-            verbatimTextOutput(outputId = "population_descriptives"), width = 2
+            column(verbatimTextOutput(outputId = "pop_1_descriptives"), width = 4)
+          ), 
+        
+          fluidRow(
+            column(plotOutput(outputId = "sample_1_plot", height = 200), width = 8), 
+            br(), 
+            column(verbatimTextOutput(outputId = "sample_1_descriptives"), width = 4)
+          ), 
+        
+          fluidRow(
+            column(plotOutput(outputId = "bootstrap_1_plot", height = 200), width = 8), 
+            br(), 
+            column(verbatimTextOutput(outputId = "bootstrap_1_descriptives"), width = 4)
           )
         ), 
         
-        fluidRow(
-          column(plotOutput(outputId = "sample_plot", height = 200), width = 10), 
-          br(), 
-          column(verbatimTextOutput(outputId = "sample_descriptives"), width = 2)
-        ), 
-        
-        fluidRow(
-          column(plotOutput(outputId = "bootstrap_1_plot", height = 200), width = 10), 
-          br(), 
-          column(verbatimTextOutput(outputId = "bootstrap_1_descriptives"), width = 2)
-        ), 
-        
-        fluidRow(
-          column(plotOutput(outputId = "bootstrap_2_plot", height = 200), width = 10), 
-          br(), 
-          column(verbatimTextOutput(outputId = "bootstrap_2_descriptives"), width = 2)
+        fluidPage(
+          fluidRow(
+            column(plotOutput(outputId = "pop_2_plot", height = 200), width = 8), 
+            br(), 
+            column(verbatimTextOutput(outputId = "pop_2_descriptives"), width = 4)
+          ), 
+          
+          fluidRow(
+            column(plotOutput(outputId = "sample_2_plot", height = 200), width = 8), 
+            br(), 
+            column(verbatimTextOutput(outputId = "sample_2_descriptives"), width = 4)
+          ), 
+          
+          fluidRow(
+            column(plotOutput(outputId = "bootstrap_2_plot", height = 200), width = 8), 
+            br(), 
+            column(verbatimTextOutput(outputId = "bootstrap_2_descriptives"), width = 4)
+          )
         )
+        
       ), width = 9
     )
   )
@@ -269,95 +319,124 @@ server <- function(input, output, session) {
   
   ##### DISTRIBUTION FUNCTIONS #####
   
-  ddist <- reactive({
-    switch(input$population, 
-           "beta" =        function(x) dbeta(x, shape1 = input$shape1, shape2 = input$shape2), 
-           "binomial" =    function(x) dbinom(x, size = input$size, prob = input$prob), 
-           "chi-square" =  function(x) dchisq(x, df = input$df), 
-           "exponential" = function(x) dexp(x, rate = input$rate), 
-           "gamma" =       function(x) dgamma(x, shape = input$shape, rate = input$rate), 
-           "normal" =      function(x) dnorm(x, mean = input$mean, sd = input$sd), 
-           "poisson" =     function(x) dpois(x, lambda = input$lambda), 
-           "t" =           function(x) dt(x, df = input$t_df), 
-           "uniform" =     function(x) dunif(x, min = input$min, max = input$max))
+  ddist_1 <- reactive({
+    switch(input$pop_1, 
+           "beta" =        function(x) dbeta(x, shape1 = input$pop_1_beta_shape1, shape2 = input$pop_1_beta_shape2), 
+           "binomial" =    function(x) dbinom(x, size = input$pop_1_binom_size, prob = input$pop_1_binom_prob), 
+           "chi-square" =  function(x) dchisq(x, df = input$pop_1_chisq_df), 
+           "exponential" = function(x) dexp(x, rate = input$pop_1_exp_rate), 
+           "gamma" =       function(x) dgamma(x, shape = input$pop_1_gamma_shape, rate = input$pop_1_gamma_rate), 
+           "normal" =      function(x) dnorm(x, mean = input$pop_1_norm_mean, sd = input$pop_1_norm_sd), 
+           "poisson" =     function(x) dpois(x, lambda = input$pop_1_pois_lambda), 
+           "t" =           function(x) dt(x, df = input$pop_1_t_df), 
+           "uniform" =     function(x) dunif(x, min = input$pop_1_unif_min, max = input$pop_1_unif_max))
   })
   
-  pdist <- reactive({
-    switch(input$population, 
-           "beta" =        function(q) pbeta(q, shape1 = input$shape1, shape2 = input$shape2), 
-           "binomial" =    function(q) pbinom(q, size = input$size, prob = input$prob), 
-           "chi-square" =  function(q) pchisq(q, df = input$df), 
-           "exponential" = function(q) pexp(q, rate = input$rate), 
-           "gamma" =       function(q) pgamma(q, shape = input$shape, rate = input$rate), 
-           "normal" =      function(q) pnorm(q, mean = input$mean, sd = input$sd), 
-           "poisson" =     function(q) ppois(q, lambda = input$lambda), 
-           "t" =           function(q) pt(q, df = input$t_df), 
-           "uniform" =     function(q) punif(q, min = input$min, max = input$max))
+  qdist_1 <- reactive({
+    switch(input$pop_1, 
+           "beta" =        function(p) qbeta(p, shape1 = input$pop_1_beta_shape1, shape2 = input$pop_1_beta_shape2), 
+           "binomial" =    function(p) qbinom(p, size = input$pop_1_binom_size, prob = input$pop_1_binom_prob), 
+           "chi-square" =  function(p) qchisq(p, df = input$pop_1_chisq_df), 
+           "exponential" = function(p) qexp(p, rate = input$pop_1_exp_rate), 
+           "gamma" =       function(p) qgamma(p, shape = input$pop_1_gamma_shape, rate = input$pop_1_gamma_rate), 
+           "normal" =      function(p) qnorm(p, mean = input$pop_1_norm_mean, sd = input$pop_1_norm_sd), 
+           "poisson" =     function(p) qpois(p, lambda = input$pop_1_pois_lambda), 
+           "t" =           function(p) qt(p, df = input$pop_1_t_df), 
+           "uniform" =     function(p) qunif(p, min = input$pop_1_unif_min, max = input$pop_1_unif_max))
   })
   
-  qdist <- reactive({
-    switch(input$population, 
-           "beta" =        function(p) qbeta(p, shape1 = input$shape1, shape2 = input$shape2), 
-           "binomial" =    function(p) qbinom(p, size = input$size, prob = input$prob), 
-           "chi-square" =  function(p) qchisq(p, df = input$df), 
-           "exponential" = function(p) qexp(p, rate = input$rate), 
-           "gamma" =       function(p) qgamma(p, shape = input$shape, rate = input$rate), 
-           "normal" =      function(p) qnorm(p, mean = input$mean, sd = input$sd), 
-           "poisson" =     function(p) qpois(p, lambda = input$lambda), 
-           "t" =           function(p) qt(p, df = input$t_df), 
-           "uniform" =     function(p) qunif(p, min = input$min, max = input$max))
+  rdist_1 <- reactive({
+    switch(input$pop_1, 
+           "beta" =        function(n) rbeta(n, shape1 = input$pop_1_beta_shape1, shape2 = input$pop_1_beta_shape2), 
+           "binomial" =    function(n) rbinom(n, size = input$pop_1_binom_size, prob = input$pop_1_binom_prob), 
+           "chi-square" =  function(n) rchisq(n, df = input$pop_1_chisq_df), 
+           "exponential" = function(n) rexp(n, rate = input$pop_1_exp_rate), 
+           "gamma" =       function(n) rgamma(n, shape = input$pop_1_gamma_shape, rate = input$pop_1_gamma_rate), 
+           "normal" =      function(n) rnorm(n, mean = input$pop_1_norm_mean, sd = input$pop_1_norm_sd), 
+           "poisson" =     function(n) rpois(n, lambda = input$pop_1_pois_lambda), 
+           "t" =           function(n) rt(n, df = input$pop_1_t_df), 
+           "uniform" =     function(n) runif(n, min = input$pop_1_unif_min, max = input$pop_1_unif_max))
+  })
+
+  ddist_2 <- reactive({
+    switch(input$pop_2, 
+           "beta" =        function(x) dbeta(x, shape1 = input$pop_2_beta_shape1, shape2 = input$pop_2_beta_shape2), 
+           "binomial" =    function(x) dbinom(x, size = input$pop_2_binom_size, prob = input$pop_2_binom_prob), 
+           "chi-square" =  function(x) dchisq(x, df = input$pop_2_chisq_df), 
+           "exponential" = function(x) dexp(x, rate = input$pop_2_exp_rate), 
+           "gamma" =       function(x) dgamma(x, shape = input$pop_2_gamma_shape, rate = input$pop_2_gamma_rate), 
+           "normal" =      function(x) dnorm(x, mean = input$pop_2_norm_mean, sd = input$pop_2_norm_sd), 
+           "poisson" =     function(x) dpois(x, lambda = input$pop_2_pois_lambda), 
+           "t" =           function(x) dt(x, df = input$pop_2_t_df), 
+           "uniform" =     function(x) dunif(x, min = input$pop_2_unif_min, max = input$pop_2_unif_max))
   })
   
-  rdist <- reactive({
-    switch(input$population, 
-           "beta" =        function(n) rbeta(n, shape1 = input$shape1, shape2 = input$shape2), 
-           "binomial" =    function(n) rbinom(n, size = input$size, prob = input$prob), 
-           "chi-square" =  function(n) rchisq(n, df = input$df), 
-           "exponential" = function(n) rexp(n, rate = input$rate), 
-           "gamma" =       function(n) rgamma(n, shape = input$shape, rate = input$rate), 
-           "normal" =      function(n) rnorm(n, mean = input$mean, sd = input$sd), 
-           "poisson" =     function(n) rpois(n, lambda = input$lambda), 
-           "t" =           function(n) rt(n, df = input$t_df), 
-           "uniform" =     function(n) runif(n, min = input$min, max = input$max))
+  qdist_2 <- reactive({
+    switch(input$pop_2, 
+           "beta" =        function(p) qbeta(p, shape1 = input$pop_2_beta_shape1, shape2 = input$pop_2_beta_shape2), 
+           "binomial" =    function(p) qbinom(p, size = input$pop_2_binom_size, prob = input$pop_2_binom_prob), 
+           "chi-square" =  function(p) qchisq(p, df = input$pop_2_chisq_df), 
+           "exponential" = function(p) qexp(p, rate = input$pop_2_exp_rate), 
+           "gamma" =       function(p) qgamma(p, shape = input$pop_2_gamma_shape, rate = input$pop_2_gamma_rate), 
+           "normal" =      function(p) qnorm(p, mean = input$pop_2_norm_mean, sd = input$pop_2_norm_sd), 
+           "poisson" =     function(p) qpois(p, lambda = input$pop_2_pois_lambda), 
+           "t" =           function(p) qt(p, df = input$pop_2_t_df), 
+           "uniform" =     function(p) qunif(p, min = input$pop_2_unif_min, max = input$pop_2_unif_max))
   })
+  
+  rdist_2 <- reactive({
+    switch(input$pop_2, 
+           "beta" =        function(n) rbeta(n, shape1 = input$pop_2_beta_shape1, shape2 = input$pop_2_beta_shape2), 
+           "binomial" =    function(n) rbinom(n, size = input$pop_2_binom_size, prob = input$pop_2_binom_prob), 
+           "chi-square" =  function(n) rchisq(n, df = input$pop_2_chisq_df), 
+           "exponential" = function(n) rexp(n, rate = input$pop_2_exp_rate), 
+           "gamma" =       function(n) rgamma(n, shape = input$pop_2_gamma_shape, rate = input$pop_2_gamma_rate), 
+           "normal" =      function(n) rnorm(n, mean = input$pop_2_norm_mean, sd = input$pop_2_norm_sd), 
+           "poisson" =     function(n) rpois(n, lambda = input$pop_2_pois_lambda), 
+           "t" =           function(n) rt(n, df = input$pop_2_t_df), 
+           "uniform" =     function(n) runif(n, min = input$pop_2_unif_min, max = input$pop_2_unif_max))
+  })
+
+
+
   
   
   
   ##### POPULATION #####
   
-  output$population_plot <- renderPlot({
+  output$pop_1_plot <- renderPlot({
     ggplot() + 
-      switch(input$population, 
+      switch(input$pop_1, 
              "poisson" = geom_step(aes(x = x, y = y), 
                                    tibble(x = seq(input$plot.xmin - 1, input$plot.xmax + 1, 1) - 0.5, 
-                                          y = dpois(x + 0.5, lambda = input$lambda)), 
+                                          y = dpois(x + 0.5, lambda = input$pop_1_pois_lambda)), 
                                    color = "#337ab7"), 
              "binomial" = geom_step(aes(x = x, y = y), 
                                     tibble(x = seq(input$plot.xmin - 1, input$plot.xmax + 1, 1) - 0.5, 
-                                           y = dbinom(x + 0.5, size = input$size, input$prob)), 
+                                           y = dbinom(x + 0.5, size = input$pop_1_binom_size, input$populaton_1_binom_prob)), 
                                     color = "#337ab7"), 
              stat_function(aes(x = input$plot.xmin:input$plot.xmax), 
                            n = (input$plot.xmax - input$plot.xmin) * 15, 
-                           fun = ddist(), 
+                           fun = ddist_1(), 
                            color = "#337ab7")
       ) + 
-      labs(title = "Population", x = "") + 
+      labs(title = "Population 1", x = "") + 
       theme_common() + 
       coord_cartesian(xlim = c(input$plot.xmin, input$plot.xmax)) + 
       vlines()
   })
-  
+
   # calculate population descriptive statistics such as mean, median, and standard deviation
   # these are reported as well as used to construct some bootstrap samples (e.g., mad or t)
-  population_descriptives <- reactive({
-    switch(input$population, 
+  pop_1_descriptives <- reactive({
+    switch(input$pop_1, 
            "beta" =        { 
-                             a <- input$shape1
-                             b <- input$shape2
+                             a <- input$pop_1_beta_shape1
+                             b <- input$pop_1_beta_shape2
                              var_x <- (a * b) / ((a + b)^2 * (a + b + 1))
                              
                              c(a / (a + b), 
-                               qdist()(0.5), 
+                               qbeta(0.5, a, b), 
                                sqrt(var_x), 
                                var_x, 
                                (2 * (b - a) * sqrt(a + b + 1)) / ((a + b + 2) * sqrt(a * b)), 
@@ -366,21 +445,21 @@ server <- function(input, output, session) {
                            }, 
            
            "binomial" =    {
-                             n <- input$size
-                             p <- input$prob
+                             n <- input$pop_1_binom_size
+                             p <- input$pop_1_binom_prob
                              var_x <- n * p * (1 - p)
                                
                              c(n * p, 
                                n * p, 
                                sqrt(var_x), 
                                var_x, 
-                               (1 - 2 * input$prob) / (sqrt(input$size * input$prob * (1 - input$prob))), 
-                               (1 - 6 * input$prob * (1 - input$prob)) / (input$size * input$prob * (1 - input$prob))
+                               (1 - 2 * p) / (sqrt(n * p * (1 - p))), 
+                               (1 - 6 * p * (1 - p)) / (n * p * (1 - p))
                               )
                            }, 
            
            "chi-square" =  {
-                             df <- input$df
+                             df <- input$pop_1_chisq_df
                              var_x <- 2 * df
                              
                              c(df, 
@@ -393,7 +472,7 @@ server <- function(input, output, session) {
                            }, 
            
            "exponential" = {
-                             rate <- input$rate
+                             rate <- input$pop_1_exp_rate
                              var_x <- rate^(-2)
                              
                              c(1 / rate, 
@@ -406,12 +485,12 @@ server <- function(input, output, session) {
                            }, 
            
            "gamma" =       {
-                             a <- input$shape
-                             b <- input$rate
+                             a <- input$pop_1_gamma_shape
+                             b <- input$pop_1_gamma_rate
                              var_x <- a / b^2
                              
                              c(a / b, 
-                               qdist()(0.5), 
+                               qgamma(0.5, a, b), 
                                sqrt(var_x), 
                                var_x, 
                                2 / sqrt(a), 
@@ -420,8 +499,8 @@ server <- function(input, output, session) {
                            }, 
            
            "normal" =      {
-                             mu <- input$mean
-                             var_x <- input$sd^2
+                             mu <- input$pop_1_norm_mean
+                             var_x <- input$pop_1_norm_sd^2
                              
                              c(mu, 
                                mu, 
@@ -433,7 +512,7 @@ server <- function(input, output, session) {
                            }, 
            
            "poisson" =     {
-                             rate <- input$rate
+                             rate <- input$pop_1_pois_rate
                              var_x <- rate
                              
                              c(rate, 
@@ -446,7 +525,7 @@ server <- function(input, output, session) {
                            }, 
            
            "t" =           {
-                             v <- input$t_df
+                             v <- input$pop_1_t_df
                              var_x <- ifelse(v > 2, 
                                              v / (v - 2), 
                                              ifelse(v > 1, Inf, NA))
@@ -458,12 +537,12 @@ server <- function(input, output, session) {
                                ifelse(v > 3, 0, NA), 
                                ifelse(v > 4, 6 / (v - 4), ifelse(v > 2, Inf, NA))
                              )
-           }, 
+                           }, 
            
            "uniform" =     {
-                             a <- input$min
-                             b <- input$max
-                             var_x <- (1 / 12) * (input$max - input$min)^2
+                             a <- input$pop_1_unif_min
+                             b <- input$pop_1_unif_max
+                             var_x <- (1 / 12) * (b - a)^2
                              
                              c((a + b) / 2, 
                                (a + b) / 2, 
@@ -476,30 +555,206 @@ server <- function(input, output, session) {
           )
   })
   
-  output$population_descriptives <- renderPrint({
-    vectxt <- paste(descriptive_labels, "=", format(round(population_descriptives(), 2), nsmall = 2))
+  output$pop_1_descriptives <- renderPrint({
+    vectxt <- paste(descriptive_labels, "=", format(round(pop_1_descriptives(), 2), nsmall = 2))
     cat(paste(vectxt, collapse = "\n"))
   })
-  
-  
-  
-  ##### SAMPLE #####
-  
-  sample_draws <- reactive({
-    rdist()(input$n_1)
-  })
-  
-  output$sample_plot <- renderPlot({
-    ggplot(tibble(sample_draws()), aes(x = sample_draws())) + 
-      geom_histogram(fill = "#337ab7") + 
-      labs(title = "Sample", x = "") + 
+
+  output$pop_2_plot <- renderPlot({
+    ggplot() + 
+      switch(input$pop_2, 
+             "poisson" = geom_step(aes(x = x, y = y), 
+                                   tibble(x = seq(input$plot.xmin - 1, input$plot.xmax + 1, 1) - 0.5, 
+                                          y = dpois(x + 0.5, lambda = input$pop_2_pois_lambda)), 
+                                   color = "#337ab7"), 
+             "binomial" = geom_step(aes(x = x, y = y), 
+                                    tibble(x = seq(input$plot.xmin - 1, input$plot.xmax + 1, 1) - 0.5, 
+                                           y = dbinom(x + 0.5, size = input$pop_2_binom_size, input$populaton_2_binom_prob)), 
+                                    color = "#337ab7"), 
+             stat_function(aes(x = input$plot.xmin:input$plot.xmax), 
+                           n = (input$plot.xmax - input$plot.xmin) * 15, 
+                           fun = ddist_2(), 
+                           color = "#337ab7")
+      ) + 
+      labs(title = "Population 2", x = "") + 
       theme_common() + 
       coord_cartesian(xlim = c(input$plot.xmin, input$plot.xmax)) + 
       vlines()
   })
   
-  output$sample_descriptives <- renderPrint({
-    cat(paste(paste(descriptive_labels, "=", format(round(descriptives(sample_draws()), 2), nsmall = 2)), collapse = "\n"))
+  # calculate population descriptive statistics such as mean, median, and standard deviation
+  # these are reported as well as used to construct some bootstrap samples (e.g., mad or t)
+  pop_2_descriptives <- reactive({
+    switch(input$pop_2, 
+           "beta" =        { 
+             a <- input$pop_2_beta_shape1
+             b <- input$pop_2_beta_shape2
+             var_x <- (a * b) / ((a + b)^2 * (a + b + 1))
+             
+             c(a / (a + b), 
+               qbeta(0.5, a, b), 
+               sqrt(var_x), 
+               var_x, 
+               (2 * (b - a) * sqrt(a + b + 1)) / ((a + b + 2) * sqrt(a * b)), 
+               (6 * ((a - b)^2 * (a + b + 1) - a * b * (a + b + 2))) / (a * b * (a + b + 2) * (a + b + 3))
+             ) 
+           }, 
+           
+           "binomial" =    {
+             n <- input$pop_2_binom_size
+             p <- input$pop_2_binom_prob
+             var_x <- n * p * (1 - p)
+             
+             c(n * p, 
+               n * p, 
+               sqrt(var_x), 
+               var_x, 
+               (1 - 2 * p) / (sqrt(n * p * (1 - p))), 
+               (1 - 6 * p * (1 - p)) / (n * p * (1 - p))
+             )
+           }, 
+           
+           "chi-square" =  {
+             df <- input$pop_2_chisq_df
+             var_x <- 2 * df
+             
+             c(df, 
+               df * (1 - 2 / (9 * df))^3, 
+               sqrt(var_x), 
+               var_x, 
+               sqrt(8 / df), 
+               12 / df
+             )
+           }, 
+           
+           "exponential" = {
+             rate <- input$pop_2_exp_rate
+             var_x <- rate^(-2)
+             
+             c(1 / rate, 
+               rate^(-1) * log(2), 
+               sqrt(var_x), 
+               var_x, 
+               2, 
+               6
+             )
+           }, 
+           
+           "gamma" =       {
+             a <- input$pop_2_gamma_shape
+             b <- input$pop_2_gamma_rate
+             var_x <- a / b^2
+             
+             c(a / b, 
+               qgamma(0.5, a, b), 
+               sqrt(var_x), 
+               var_x, 
+               2 / sqrt(a), 
+               6 / a
+             )
+           }, 
+           
+           "normal" =      {
+             mu <- input$pop_2_norm_mean
+             var_x <- input$pop_2_norm_sd^2
+             
+             c(mu, 
+               mu, 
+               sqrt(var_x), 
+               var_x, 
+               0, 
+               0
+             )
+           }, 
+           
+           "poisson" =     {
+             rate <- input$pop_2_pois_rate
+             var_x <- rate
+             
+             c(rate, 
+               rate + 1 / 3 - 0.02 / rate, 
+               sqrt(var_x), 
+               var_x, 
+               rate^(-1 / 2), 
+               1 / rate
+             )
+           }, 
+           
+           "t" =           {
+             v <- input$pop_2_t_df
+             var_x <- ifelse(v > 2, 
+                             v / (v - 2), 
+                             ifelse(v > 1, Inf, NA))
+             
+             c(ifelse(v > 1, 0, NA), 
+               0, 
+               sqrt(var_x), 
+               var_x, 
+               ifelse(v > 3, 0, NA), 
+               ifelse(v > 4, 6 / (v - 4), ifelse(v > 2, Inf, NA))
+             )
+           }, 
+           
+           "uniform" =     {
+             a <- input$pop_2_unif_min
+             b <- input$pop_2_unif_max
+             var_x <- (1 / 12) * (b - a)^2
+             
+             c((a + b) / 2, 
+               (a + b) / 2, 
+               sqrt(var_x), 
+               var_x, 
+               0, 
+               -6 / 5
+             )
+           }
+    )
+  })
+  
+  output$pop_2_descriptives <- renderPrint({
+    vectxt <- paste(descriptive_labels, "=", format(round(pop_2_descriptives(), 2), nsmall = 2))
+    cat(paste(vectxt, collapse = "\n"))
+  })
+
+  
+  
+
+  
+    
+  ##### SAMPLE #####
+  
+  sample_1_draws <- reactive({
+    rdist_1()(input$n_1)
+  })
+  
+  output$sample_1_plot <- renderPlot({
+    ggplot(tibble(sample_1_draws()), aes(x = sample_1_draws())) + 
+      geom_histogram(fill = "#337ab7") + 
+      labs(title = "Sample 1", x = "") + 
+      theme_common() + 
+      coord_cartesian(xlim = c(input$plot.xmin, input$plot.xmax)) + 
+      vlines()
+  })
+  
+  output$sample_1_descriptives <- renderPrint({
+    cat(paste(paste(descriptive_labels, "=", format(round(descriptives(sample_1_draws()), 2), nsmall = 2)), collapse = "\n"))
+  })
+  
+  sample_2_draws <- reactive({
+    rdist_2()(input$n_2)
+  })
+  
+  output$sample_2_plot <- renderPlot({
+    ggplot(tibble(sample_2_draws()), aes(x = sample_2_draws())) + 
+      geom_histogram(fill = "#337ab7") + 
+      labs(title = "Sample 2", x = "") + 
+      theme_common() + 
+      coord_cartesian(xlim = c(input$plot.xmin, input$plot.xmax)) + 
+      vlines()
+  })
+  
+  output$sample_2_descriptives <- renderPrint({
+    cat(paste(paste(descriptive_labels, "=", format(round(descriptives(sample_2_draws()), 2), nsmall = 2)), collapse = "\n"))
   })
   
   
@@ -516,19 +771,19 @@ server <- function(input, output, session) {
                           "iqr" =    function(x) IQR(x, type = input$T_1.type), 
                           "range" =  function(x) diff(range(x)), 
                           "order" =  function(x) sort(x)[input$T_1.order], 
-                          "t" =      function(x) t.test(x, mu = population_descriptives()[1])$statistic, 
-                          "mad" =    function(x) mad(x, center = population_descriptives()[1]), 
+                          "t" =      function(x) t.test(x, mu = pop_descriptives()[1])$statistic, 
+                          "mad" =    function(x) mad(x, center = pop_descriptives()[1]), 
                           "custom" = function(x) eval_tidy(parse_expr(input$T_1.custom)))
     
     replicate(input$R_1, {
       draws <- if(input$out_prop_1 == 0) {
-        rdist()(input$n_1)
+        rdist_1()(input$n_1)
       } else {
         switch(input$out_side_1, 
                "Both" = {
                  n_out <- 2 * round(input$out_prop_1 * input$n_1 / 2)
                  n_in <- input$n_1 - n_out
-                 draws_in <- rdist()(n_in)
+                 draws_in <- rdist_1()(n_in)
                  q <- quantile(draws_in, probs = seq(0.25, 1, 0.25))
                  draws_out_lwr <- runif(n_out / 2, 
                                         min = q[1] - 4.5 * (q[3] - q[1]),
@@ -541,7 +796,7 @@ server <- function(input, output, session) {
                "Lower" = {
                  n_out <- round(input$out_prop_1 * input$n_1)
                  n_in <- input$n_1 - n_out
-                 draws_in <- rdist()(n_in)
+                 draws_in <- rdist_1()(n_in)
                  q <- quantile(draws_in, probs = seq(0.25, 1, 0.25))
                  draws_out_lwr <- runif(n_out / 2, 
                                         min = q[1] - 4.5 * (q[3] - q[1]),
@@ -551,7 +806,7 @@ server <- function(input, output, session) {
                "Upper" = {
                  n_out <- round(input$out_prop_1 * input$n_1)
                  n_in <- input$n_1 - n_out
-                 draws_in <- rdist()(n_in)
+                 draws_in <- rdist_1()(n_in)
                  q <- quantile(draws_in, probs = seq(0.25, 1, 0.25))
                  draws_out_upr <- runif(n_out / 2, 
                                         min = q[3] + 1.5 * (q[3] - q[1]), 
@@ -596,19 +851,19 @@ server <- function(input, output, session) {
                           "iqr" =    function(x) IQR(x, type = input$T_2.type), 
                           "range" =  function(x) diff(range(x)), 
                           "order" =  function(x) sort(x)[input$T_2.order], 
-                          "t" =      function(x) t.test(x, mu = population_descriptives()[1])$statistic, 
-                          "mad" =    function(x) mad(x, center = population_descriptives()[1]), 
+                          "t" =      function(x) t.test(x, mu = pop_descriptives()[1])$statistic, 
+                          "mad" =    function(x) mad(x, center = pop_descriptives()[1]), 
                           "custom" = function(x) eval_tidy(parse_expr(input$T_2.custom)))
     
     replicate(input$R_2, {
       draws <- if(input$out_prop_2 == 0) {
-        rdist()(input$n_2)
+        rdist_2()(input$n_2)
       } else {
         switch(input$out_side_2, 
                "Both" = {
                  n_out <- 2 * round(input$out_prop_2 * input$n_2 / 2)
                  n_in <- input$n_2 - n_out
-                 draws_in <- rdist()(n_in)
+                 draws_in <- rdist_2()(n_in)
                  q <- quantile(draws_in, probs = seq(0.25, 1, 0.25))
                  draws_out_lwr <- runif(n_out / 2, 
                                         min = q[1] - 4.5 * (q[3] - q[1]),
@@ -621,7 +876,7 @@ server <- function(input, output, session) {
                "Lower" = {
                  n_out <- round(input$out_prop_2 * input$n_2)
                  n_in <- input$n_2 - n_out
-                 draws_in <- rdist()(n_in)
+                 draws_in <- rdist_2()(n_in)
                  q <- quantile(draws_in, probs = seq(0.25, 1, 0.25))
                  draws_out_lwr <- runif(n_out / 2, 
                                         min = q[1] - 4.5 * (q[3] - q[1]),
@@ -631,7 +886,7 @@ server <- function(input, output, session) {
                "Upper" = {
                  n_out <- round(input$out_prop_2 * input$n_2)
                  n_in <- input$n_2 - n_out
-                 draws_in <- rdist()(n_in)
+                 draws_in <- rdist_2()(n_in)
                  q <- quantile(draws_in, probs = seq(0.25, 1, 0.25))
                  draws_out_upr <- runif(n_out / 2, 
                                         min = q[3] + 1.5 * (q[3] - q[1]), 
