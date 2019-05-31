@@ -817,7 +817,7 @@ server <- function(input, output, session) {
       }
       
       if(runif(1) < input$out_single_prob_1)
-        draws[sample(length(draws), 1)] <- input$out_single_value_1
+        draws[sample(length(draws), 1)] <- sample(c(-1,1), 1) * input$out_single_value_1
       
       statistic_1(draws)
     })
