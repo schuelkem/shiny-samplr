@@ -143,7 +143,7 @@ ui <- fluidPage(
                      
                      br(), 
                      
-                     numericInput(inputId = "out_single_value_1", label = "Single Outlier Value 1", value = 1000), 
+                     numericInput(inputId = "out_single_value_1", label = "Single Outlier Magnitude 1", value = 1000, min = 0), 
                      
                      numericInput(inputId = "out_single_prob_1", label = "Probability of Inclusion", value = 0, min = 0, max = 1), 
                      
@@ -155,7 +155,7 @@ ui <- fluidPage(
                      
                      br(), 
                      
-                     numericInput(inputId = "out_single_value_2", label = "Single Outlier Value 2", value = 1000), 
+                     numericInput(inputId = "out_single_value_2", label = "Single Outlier Magnitude 2", value = 1000, min = 0), 
                      
                      numericInput(inputId = "out_single_prob_2", label = "Probability of Inclusion", value = 0, min = 0, max = 1)
                    )
@@ -826,7 +826,7 @@ server <- function(input, output, session) {
   output$bootstrap_1_plot <- renderPlot({
     ggplot(tibble(bootstrap_1_draws()), aes(x = bootstrap_1_draws())) + 
       geom_histogram(fill = "#337ab7") + 
-      labs(title = "Bootstrap Distribution 1", x = "") + 
+      labs(title = "Bootstrap Sampling Distribution 1", x = "") + 
       theme_common() + 
       coord_cartesian(xlim = c(input$plot.xmin, input$plot.xmax)) + 
       vlines()
@@ -906,7 +906,7 @@ server <- function(input, output, session) {
   output$bootstrap_2_plot <- renderPlot({
     ggplot(tibble(bootstrap_2_draws()), aes(x = bootstrap_2_draws())) + 
       geom_histogram(fill = "#337ab7") + 
-      labs(title = "Boostrap Distribution 2", x = "") + 
+      labs(title = "Boostrap Sampling Distribution 2", x = "") + 
       theme_common() + 
       coord_cartesian(xlim = c(input$plot.xmin, input$plot.xmax)) + 
       vlines()
