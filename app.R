@@ -6,30 +6,7 @@ library(rlang)
 library(shiny)
 
 source("sdist.R")
-
-
-
-##### FUNCTIONS #####
-
-skew <- function(x) {
-  n <- length(x)
-  x <- scale(x, scale = FALSE)
-  sqrt(n) * sum(x^3) / (sum(x^2)^(3/2))
-}
-
-kurtosis <- function(x) {
-  n <- length(x)
-  x <- scale(x, scale = FALSE)
-  r <- n * sum(x^4) / (sum(x^2)^2) - 3
-}
-
-descriptives <- function(x) {
-  c(mean(x), median(x), sd(x), var(x), skew(x), kurtosis(x))
-}
-
-theme_common <- function() {
-  theme(axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank())
-}
+source("ssamp.R")
 
 
 
@@ -37,7 +14,10 @@ theme_common <- function() {
 
 pop_choices <- c("beta", "binomial", "chi-square", "exponential", "gamma", "normal", "poisson", "t", "uniform")
 statistic_choices <- c("mean", "median", "sd", "var", "var*", "iqr", "range", "order", "t", "mad", "custom")
-descriptive_labels <- c("mean", "median", "sd", "var", "skew", "kurtosis")
+
+theme_common <- function() {
+  theme(axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank())
+}
 
 
 
@@ -445,7 +425,7 @@ server <- function(input, output, session) {
   })
   
   output$pop_1_descriptives <- renderPrint({
-    vectxt <- paste(descriptive_labels, "=", format(round(pop_1_descriptives(), 2), nsmall = 2))
+    vectxt <- paste(names(pop_1_descriptives()), "=", format(round(pop_1_descriptives(), 2), nsmall = 2))
     cat(paste(vectxt, collapse = "\n"))
   })
 
@@ -488,7 +468,7 @@ server <- function(input, output, session) {
   })
   
   output$pop_2_descriptives <- renderPrint({
-    vectxt <- paste(descriptive_labels, "=", format(round(pop_2_descriptives(), 2), nsmall = 2))
+    vectxt <- paste(names(pop_2_descriptives()), "=", format(round(pop_2_descriptives(), 2), nsmall = 2))
     cat(paste(vectxt, collapse = "\n"))
   })
 
@@ -512,8 +492,13 @@ server <- function(input, output, session) {
       vlines()
   })
   
+  sample_1_descriptives <- reactive({
+    ssamp(sample_1_draws())
+  })
+  
   output$sample_1_descriptives <- renderPrint({
-    cat(paste(paste(descriptive_labels, "=", format(round(descriptives(sample_1_draws()), 2), nsmall = 2)), collapse = "\n"))
+    vectxt <- paste(names(sample_1_descriptives()), "=", format(round(sample_1_descriptives(), 2), nsmall = 2))
+    cat(paste(vectxt, collapse = "\n"))
   })
   
   sample_2_draws <- reactive({
@@ -529,8 +514,13 @@ server <- function(input, output, session) {
       vlines()
   })
   
+  sample_2_descriptives <- reactive({
+    ssamp(sample_2_draws())
+  })
+  
   output$sample_2_descriptives <- renderPrint({
-    cat(paste(paste(descriptive_labels, "=", format(round(descriptives(sample_2_draws()), 2), nsmall = 2)), collapse = "\n"))
+    vectxt <- paste(names(sample_2_descriptives()), "=", format(round(sample_2_descriptives(), 2), nsmall = 2))
+    cat(paste(vectxt, collapse = "\n"))
   })
   
   
@@ -608,8 +598,12 @@ server <- function(input, output, session) {
       vlines()
   })
   
+  bootstrap_1_descriptives <- reactive({
+    ssamp(bootstrap_1_draws())
+  })
+  
   output$bootstrap_1_descriptives <- renderPrint({
-    vectxt <- paste(descriptive_labels, "=", format(round(descriptives(bootstrap_1_draws()), 2), nsmall = 2))
+    vectxt <- paste(names(bootstrap_1_descriptives()), "=", format(round(bootstrap_1_descriptives(), 2), nsmall = 2))
     cat(paste(vectxt, collapse = "\n"))
   })
   
@@ -688,8 +682,12 @@ server <- function(input, output, session) {
       vlines()
   })
   
+  bootstrap_2_descriptives <- reactive({
+    ssamp(bootstrap_2_draws())
+  })
+  
   output$bootstrap_2_descriptives <- renderPrint({
-    vectxt <- paste(descriptive_labels, "=", format(round(descriptives(bootstrap_2_draws()), 2), nsmall = 2))
+    vectxt <- paste(names(bootstrap_2_descriptives()), "=", format(round(bootstrap_2_descriptives(), 2), nsmall = 2))
     cat(paste(vectxt, collapse = "\n"))
   })
 }
