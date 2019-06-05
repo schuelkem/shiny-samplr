@@ -18,15 +18,21 @@ sampling distributions.
   - R (\>= 3.1.0)
   - dplyr (\>= 0.8.0)
   - ggplot2 (\>= 3.1.0)
+  - rlang (\>= 0.3.4)
   - shiny (\>= 1.2.0)
+
+## Recommended
+
+  - RStudio (\>= 1.2)
 
 ## Getting Started
 
-Download the `app.R` file and run from the R console:
-
-``` r
-shiny::runApp('~/app.R')
-```
+1.  Click
+    [here](https://github.com/schuelkem/shiny-samplr/archive/master.zip)
+    to download a zipped copy of this repository.
+2.  Unzip the download.
+3.  Open the `app.R` file with RStudio.
+4.  Click <img src="img/run_app_button.png" height="16px">.
 
 ## About
 
