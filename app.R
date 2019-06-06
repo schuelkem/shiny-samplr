@@ -12,7 +12,7 @@ source("ssamp.R")
 
 ##### COMMON OBJECTS #####
 
-pop_choices <- c("beta", "binomial", "chi-square", "exponential", "gamma", "normal", "poisson", "t", "uniform")
+pop_choices <- c("beta", "binomial", "chi-square", "exponential", "gamma", "log-normal", "normal", "poisson", "t", "uniform")
 statistic_choices <- c("mean", "median", "sd", "var", "var*", "iqr", "range", "order", "t", "mad", "custom")
 
 theme_common <- function() {
@@ -55,6 +55,10 @@ ui <- fluidPage(
                                       numericInput(inputId = "pop_1_gamma_shape", label = "shape", value = 1), 
                                       numericInput(inputId = "pop_1_gamma_rate", label = "rate", value = 1)), 
                      
+                     conditionalPanel("input.pop_1 == 'log-normal'", 
+                                      numericInput(inputId = "pop_1_lnorm_meanlog", label = "meanlog", value = 0), 
+                                      numericInput(inputId = "pop_1_lnorm_sdlog", label = "sdlog", value = 1)), 
+                     
                      conditionalPanel("input.pop_1 == 'normal'", 
                                       numericInput(inputId = "pop_1_norm_mean", label = "mean", value = 0), 
                                       numericInput(inputId = "pop_1_norm_sd", label = "sd", value = 1)), 
@@ -90,6 +94,10 @@ ui <- fluidPage(
                      conditionalPanel("input.pop_2 == 'gamma'", 
                                       numericInput(inputId = "pop_2_gamma_shape", label = "shape", value = 1), 
                                       numericInput(inputId = "pop_2_gamma_rate", label = "rate", value = 1)), 
+                     
+                     conditionalPanel("input.pop_2 == 'log-normal'", 
+                                      numericInput(inputId = "pop_2_lnorm_meanlog", label = "meanlog", value = 0), 
+                                      numericInput(inputId = "pop_2_lnorm_sdlog", label = "sdlog", value = 1)), 
                      
                      conditionalPanel("input.pop_2 == 'normal'", 
                                       numericInput(inputId = "pop_2_norm_mean", label = "mean", value = 0), 
@@ -308,6 +316,7 @@ server <- function(input, output, session) {
            "chi-square" =  function(x) dchisq(x, df = input$pop_1_chisq_df), 
            "exponential" = function(x) dexp(x, rate = input$pop_1_exp_rate), 
            "gamma" =       function(x) dgamma(x, shape = input$pop_1_gamma_shape, rate = input$pop_1_gamma_rate), 
+           "log-normal" =  function(x) dlnorm(x, meanlog = input$pop_1_lnorm_meanlog, sdlog = input$pop_1_lnorm_sdlog), 
            "normal" =      function(x) dnorm(x, mean = input$pop_1_norm_mean, sd = input$pop_1_norm_sd), 
            "poisson" =     function(x) dpois(x, lambda = input$pop_1_pois_lambda), 
            "t" =           function(x) dt(x, df = input$pop_1_t_df), 
@@ -321,6 +330,7 @@ server <- function(input, output, session) {
            "chi-square" =  function(p) qchisq(p, df = input$pop_1_chisq_df), 
            "exponential" = function(p) qexp(p, rate = input$pop_1_exp_rate), 
            "gamma" =       function(p) qgamma(p, shape = input$pop_1_gamma_shape, rate = input$pop_1_gamma_rate), 
+           "log-normal" =  function(p) qlnorm(p, meanlog = input$pop_1_lnorm_meanlog, sdlog = input$pop_1_lnorm_sdlog), 
            "normal" =      function(p) qnorm(p, mean = input$pop_1_norm_mean, sd = input$pop_1_norm_sd), 
            "poisson" =     function(p) qpois(p, lambda = input$pop_1_pois_lambda), 
            "t" =           function(p) qt(p, df = input$pop_1_t_df), 
@@ -334,6 +344,7 @@ server <- function(input, output, session) {
            "chi-square" =  function(n) rchisq(n, df = input$pop_1_chisq_df), 
            "exponential" = function(n) rexp(n, rate = input$pop_1_exp_rate), 
            "gamma" =       function(n) rgamma(n, shape = input$pop_1_gamma_shape, rate = input$pop_1_gamma_rate), 
+           "log-normal" =  function(n) rlnorm(n, meanlog = input$pop_1_lnorm_meanlog, sdlog = input$pop_1_lnorm_sdlog), 
            "normal" =      function(n) rnorm(n, mean = input$pop_1_norm_mean, sd = input$pop_1_norm_sd), 
            "poisson" =     function(n) rpois(n, lambda = input$pop_1_pois_lambda), 
            "t" =           function(n) rt(n, df = input$pop_1_t_df), 
@@ -347,6 +358,7 @@ server <- function(input, output, session) {
            "chi-square" =  function(x) dchisq(x, df = input$pop_2_chisq_df), 
            "exponential" = function(x) dexp(x, rate = input$pop_2_exp_rate), 
            "gamma" =       function(x) dgamma(x, shape = input$pop_2_gamma_shape, rate = input$pop_2_gamma_rate), 
+           "log-normal" =  function(x) dlnorm(x, meanlog = input$pop_2_lnorm_meanlog, sdlog = input$pop_2_lnorm_sdlog), 
            "normal" =      function(x) dnorm(x, mean = input$pop_2_norm_mean, sd = input$pop_2_norm_sd), 
            "poisson" =     function(x) dpois(x, lambda = input$pop_2_pois_lambda), 
            "t" =           function(x) dt(x, df = input$pop_2_t_df), 
@@ -360,6 +372,7 @@ server <- function(input, output, session) {
            "chi-square" =  function(p) qchisq(p, df = input$pop_2_chisq_df), 
            "exponential" = function(p) qexp(p, rate = input$pop_2_exp_rate), 
            "gamma" =       function(p) qgamma(p, shape = input$pop_2_gamma_shape, rate = input$pop_2_gamma_rate), 
+           "log-normal" =  function(p) qlnorm(p, meanlog = input$pop_2_lnorm_meanlog, sdlog = input$pop_2_lnorm_sdlog), 
            "normal" =      function(p) qnorm(p, mean = input$pop_2_norm_mean, sd = input$pop_2_norm_sd), 
            "poisson" =     function(p) qpois(p, lambda = input$pop_2_pois_lambda), 
            "t" =           function(p) qt(p, df = input$pop_2_t_df), 
@@ -373,6 +386,7 @@ server <- function(input, output, session) {
            "chi-square" =  function(n) rchisq(n, df = input$pop_2_chisq_df), 
            "exponential" = function(n) rexp(n, rate = input$pop_2_exp_rate), 
            "gamma" =       function(n) rgamma(n, shape = input$pop_2_gamma_shape, rate = input$pop_2_gamma_rate), 
+           "log-normal" =  function(n) rlnorm(n, meanlog = input$pop_2_lnorm_meanlog, sdlog = input$pop_2_lnorm_sdlog), 
            "normal" =      function(n) rnorm(n, mean = input$pop_2_norm_mean, sd = input$pop_2_norm_sd), 
            "poisson" =     function(n) rpois(n, lambda = input$pop_2_pois_lambda), 
            "t" =           function(n) rt(n, df = input$pop_2_t_df), 
@@ -417,6 +431,7 @@ server <- function(input, output, session) {
            "chi-square" =  schisq(input$pop_1_chisq_df), 
            "exponential" = sexp(input$pop_1_exp_rate), 
            "gamma" =       sgamma(input$pop_1_gamma_shape, input$pop_1_gamma_rate), 
+           "log-normal" =  slnorm(input$pop_1_lnorm_meanlog, input$pop_1_lnorm_sdlog), 
            "normal" =      snorm(input$pop_1_norm_mean, input$pop_1_norm_sd), 
            "poisson" =     spois(input$pop_1_pois_lambda), 
            "t" =           st(input$pop_1_t_df), 
@@ -460,6 +475,7 @@ server <- function(input, output, session) {
            "chi-square" =  schisq(input$pop_2_chisq_df), 
            "exponential" = sexp(input$pop_2_exp_rate), 
            "gamma" =       sgamma(input$pop_2_gamma_shape, input$pop_2_gamma_rate), 
+           "log-normal" =  slnorm(input$pop_2_lnorm_meanlog, input$pop_2_lnorm_sdlog), 
            "normal" =      snorm(input$pop_2_norm_mean, input$pop_2_norm_sd), 
            "poisson" =     spois(input$pop_2_pois_lambda), 
            "t" =           st(input$pop_2_t_df), 
