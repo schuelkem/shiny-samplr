@@ -21,10 +21,8 @@ ssamp <- function(x, statistic = c("all", "mean", "median", "sd", "var", "skew",
          "skew"   = c("skew" = skew(x)), 
          "kurt"   = c("kurt" = kurtosis(x)),
          "all"    = {
-           all <-   c("mean", "median", "sd", "var", "skew", "kurt")
-           stats <- vapply(all, function(statistic, x, ...) ssamp(x, statistic, ...), numeric(1), x, ...)
-           names(stats) <- all
-           stats
+           all <- rlang::eval_tidy(formals(ssamp)[["statistic"]])[-1]
+           vapply(all, function(statistic, x, ...) ssamp(x, statistic, ...), numeric(1), x, ...)
          }
   )
 }
