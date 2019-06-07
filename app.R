@@ -12,11 +12,33 @@ source("ssamp.R")
 
 ##### COMMON OBJECTS #####
 
-pop_choices <- c("beta", "binomial", "chi-square", "exponential", "gamma", "log-normal", "normal", "poisson", "t", "uniform")
-statistic_choices <- c("mean", "median", "sd", "var", "var*", "iqr", "range", "order", "t", "mad", "custom")
+pop_choices <- c("beta", 
+                 "binomial", 
+                 "chi-square", 
+                 "exponential", 
+                 "gamma", 
+                 "log-normal", 
+                 "normal", 
+                 "poisson", 
+                 "t", 
+                 "uniform")
+
+statistic_choices <- c("mean", 
+                       "median", 
+                       "sd", 
+                       "var", 
+                       "var*", 
+                       "iqr", 
+                       "range", 
+                       "order", 
+                       "t", 
+                       "mad", 
+                       "custom")
 
 theme_common <- function() {
-  theme(axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank())
+  theme(axis.title.y = element_blank(), 
+        axis.text.y = element_blank(), 
+        axis.ticks.y = element_blank())
 }
 
 
@@ -25,16 +47,27 @@ theme_common <- function() {
 
 
 ui <- fluidPage(
+  
   withMathJax(), 
   
   titlePanel("shiny-samplr"), 
   
   sidebarLayout(
+    
     sidebarPanel(
+      
       fluidPage(
+        
         navlistPanel(
+          
           tabPanel("Population", 
+                   
                    fluidPage(
+                     
+                     selectInput(inputId = "n_pop", label = "Number of Examples", choices = c("one", "two"), selected = "two"), 
+                     
+                     br(), br(), 
+                     
                      selectInput(inputId = "pop_1", label = "Population 1", choices = pop_choices, selected = "normal"), 
                      
                      conditionalPanel("input.pop_1 == 'beta'", 
@@ -73,60 +106,72 @@ ui <- fluidPage(
                                       numericInput(inputId = "pop_1_unif_min", label = "min", value = 0), 
                                       numericInput(inputId = "pop_1_unif_max", label = "max", value = 1)), 
                      
-                     br(), br(), 
+                     conditionalPanel("input.n_pop == 'two'", 
+                                      
+                                      br(), br(), 
+                                      
+                                      selectInput(inputId = "pop_2", label = "Population 2", choices = pop_choices, selected = "normal"), 
+                                      
+                                      conditionalPanel("input.pop_2 == 'beta'", 
+                                                       numericInput(inputId = "pop_2_beta_shape1", label = "shape1", value = 1), 
+                                                       numericInput(inputId = "pop_2_beta_shape2", label = "shape2", value = 1)), 
+                                      
+                                      conditionalPanel("input.pop_2 == 'binomial'", 
+                                                       numericInput(inputId = "pop_2_binom_size", label = "size", value = 1), 
+                                                       numericInput(inputId = "pop_2_binom_prob", label = "prob", value = 0.5)), 
+                                      
+                                      conditionalPanel("input.pop_2 == 'chi-square'", 
+                                                       numericInput(inputId = "pop_2_chisq_df", label = "df", value = 1)), 
+                                      
+                                      conditionalPanel("input.pop_2 == 'exponential'", 
+                                                       numericInput(inputId = "pop_2_exp_rate", label = "rate", value = 1)), 
+                                      
+                                      conditionalPanel("input.pop_2 == 'gamma'", 
+                                                       numericInput(inputId = "pop_2_gamma_shape", label = "shape", value = 1), 
+                                                       numericInput(inputId = "pop_2_gamma_rate", label = "rate", value = 1)), 
+                                      
+                                      conditionalPanel("input.pop_2 == 'log-normal'", 
+                                                       numericInput(inputId = "pop_2_lnorm_meanlog", label = "meanlog", value = 0), 
+                                                       numericInput(inputId = "pop_2_lnorm_sdlog", label = "sdlog", value = 1)), 
+                                      
+                                      conditionalPanel("input.pop_2 == 'normal'", 
+                                                       numericInput(inputId = "pop_2_norm_mean", label = "mean", value = 0), 
+                                                       numericInput(inputId = "pop_2_norm_sd", label = "sd", value = 1)), 
+                                      
+                                      conditionalPanel("input.pop_2 == 'poisson'", 
+                                                       numericInput(inputId = "pop_2_pois_lambda", label = "lambda", value = 1)), 
+                                      
+                                      conditionalPanel("input.pop_2 == 't'", 
+                                                       numericInput(inputId = "pop_2_t_df", label = "df", value = 1)), 
+                                      
+                                      conditionalPanel("input.pop_2 == 'uniform'", 
+                                                       numericInput(inputId = "pop_2_unif_min", label = "min", value = 0), 
+                                                       numericInput(inputId = "pop_2_unif_max", label = "max", value = 1))
+                     )
                      
-                     selectInput(inputId = "pop_2", label = "Population 2", choices = pop_choices, selected = "normal"), 
-                     
-                     conditionalPanel("input.pop_2 == 'beta'", 
-                                      numericInput(inputId = "pop_2_beta_shape1", label = "shape1", value = 1), 
-                                      numericInput(inputId = "pop_2_beta_shape2", label = "shape2", value = 1)), 
-                     
-                     conditionalPanel("input.pop_2 == 'binomial'", 
-                                      numericInput(inputId = "pop_2_binom_size", label = "size", value = 1), 
-                                      numericInput(inputId = "pop_2_binom_prob", label = "prob", value = 0.5)), 
-                     
-                     conditionalPanel("input.pop_2 == 'chi-square'", 
-                                      numericInput(inputId = "pop_2_chisq_df", label = "df", value = 1)), 
-                     
-                     conditionalPanel("input.pop_2 == 'exponential'", 
-                                      numericInput(inputId = "pop_2_exp_rate", label = "rate", value = 1)), 
-                     
-                     conditionalPanel("input.pop_2 == 'gamma'", 
-                                      numericInput(inputId = "pop_2_gamma_shape", label = "shape", value = 1), 
-                                      numericInput(inputId = "pop_2_gamma_rate", label = "rate", value = 1)), 
-                     
-                     conditionalPanel("input.pop_2 == 'log-normal'", 
-                                      numericInput(inputId = "pop_2_lnorm_meanlog", label = "meanlog", value = 0), 
-                                      numericInput(inputId = "pop_2_lnorm_sdlog", label = "sdlog", value = 1)), 
-                     
-                     conditionalPanel("input.pop_2 == 'normal'", 
-                                      numericInput(inputId = "pop_2_norm_mean", label = "mean", value = 0), 
-                                      numericInput(inputId = "pop_2_norm_sd", label = "sd", value = 1)), 
-                     
-                     conditionalPanel("input.pop_2 == 'poisson'", 
-                                      numericInput(inputId = "pop_2_pois_lambda", label = "lambda", value = 1)), 
-                     
-                     conditionalPanel("input.pop_2 == 't'", 
-                                      numericInput(inputId = "pop_2_t_df", label = "df", value = 1)), 
-                     
-                     conditionalPanel("input.pop_2 == 'uniform'", 
-                                      numericInput(inputId = "pop_2_unif_min", label = "min", value = 0), 
-                                      numericInput(inputId = "pop_2_unif_max", label = "max", value = 1))
                    )
+                   
           ), 
           
           tabPanel("Sample", 
+                   
                    fluidPage(
+                     
                      numericInput(inputId = "n_1", label = HTML("$$ n_1 $$"), value = 15, min = 1), 
                      
-                     br(), br(), 
+                     conditionalPanel("input.n_pop == 'two'", 
+                                      br(), br(), 
+                                      numericInput(inputId = "n_2", label = HTML("$$ n_2 $$"), value = 15, min = 1)
+                     )
                      
-                     numericInput(inputId = "n_2", label = HTML("$$ n_2 $$"), value = 15, min = 1)
                    )
+                   
           ), 
           
           tabPanel("Outliers", 
+                   
                    fluidPage(
+                     
                      numericInput(inputId = "out_prop_1", label = "Proportion of Outliers 1", value = 0, min = 0, max = 1), 
                      
                      selectInput(inputId = "out_side_1", label = "Side", choices = c("Both", "Lower", "Upper")), 
@@ -137,22 +182,29 @@ ui <- fluidPage(
                      
                      numericInput(inputId = "out_single_prob_1", label = "Probability of Inclusion", value = 0, min = 0, max = 1), 
                      
-                     br(), br(), 
+                     conditionalPanel("input.n_pop == 'two'", 
+                                      
+                                      br(), br(), 
+                                      
+                                      numericInput(inputId = "out_prop_2", label = "Proportion of Outliers 2", value = 0, min = 0, max = 1), 
+                                      
+                                      selectInput(inputId = "out_side_2", label = "Side", choices = c("Both", "Lower", "Upper")), 
+                                      
+                                      br(), 
+                                      
+                                      numericInput(inputId = "out_single_value_2", label = "Single Outlier Magnitude 2", value = 1000, min = 0), 
+                                      
+                                      numericInput(inputId = "out_single_prob_2", label = "Probability of Inclusion", value = 0, min = 0, max = 1)
+                     )
                      
-                     numericInput(inputId = "out_prop_2", label = "Proportion of Outliers 2", value = 0, min = 0, max = 1), 
-                     
-                     selectInput(inputId = "out_side_2", label = "Side", choices = c("Both", "Lower", "Upper")), 
-                     
-                     br(), 
-                     
-                     numericInput(inputId = "out_single_value_2", label = "Single Outlier Magnitude 2", value = 1000, min = 0), 
-                     
-                     numericInput(inputId = "out_single_prob_2", label = "Probability of Inclusion", value = 0, min = 0, max = 1)
                    )
+                   
           ), 
           
           tabPanel("Statistic", 
+                   
                    fluidPage(
+                     
                      selectInput(inputId = "T_1", label = HTML("$$ T_1 $$"), choices = statistic_choices, selected = "mean"), 
                      
                      conditionalPanel("input.T_1 == 'mean'", 
@@ -167,36 +219,48 @@ ui <- fluidPage(
                      conditionalPanel("input.T_1 == 'custom'", 
                                       textInput(inputId = "T_1.custom", label = "f(x)", value = "sum(x) / length(x)")), 
                      
-                     br(), br(), 
+                     conditionalPanel("input.n_pop == 'two'", 
+                                      
+                                      br(), br(), 
+                                      
+                                      selectInput(inputId = "T_2", label = HTML("$$ T_2 $$"), choices = statistic_choices, selected = "mean"), 
+                                      
+                                      conditionalPanel("input.T_2 == 'mean'", 
+                                                       numericInput(inputId = "T_2.trim", label = "trim", value = 0, min = 0, max = 0.5)), 
+                                      
+                                      conditionalPanel("input.T_2 == 'iqr'", 
+                                                       numericInput(inputId = "T_2.type", label = "type", value = 7, min = 1, max = 9, step = 1)), 
+                                      
+                                      conditionalPanel("input.T_2 == 'order'", 
+                                                       numericInput(inputId = "T_2.order", label = "order", value = 1, min = 1, max = 15, step = 1)), 
+                                      
+                                      conditionalPanel("input.T_2 == 'custom'", 
+                                                       textInput(inputId = "T_2.custom", label = "f(x)", value = "sum(x) / length(x)"))
+                     )
                      
-                     selectInput(inputId = "T_2", label = HTML("$$ T_2 $$"), choices = statistic_choices, selected = "mean"), 
-                     
-                     conditionalPanel("input.T_2 == 'mean'", 
-                                      numericInput(inputId = "T_2.trim", label = "trim", value = 0, min = 0, max = 0.5)), 
-                     
-                     conditionalPanel("input.T_2 == 'iqr'", 
-                                      numericInput(inputId = "T_2.type", label = "type", value = 7, min = 1, max = 9, step = 1)), 
-                     
-                     conditionalPanel("input.T_2 == 'order'", 
-                                      numericInput(inputId = "T_2.order", label = "order", value = 1, min = 1, max = 15, step = 1)), 
-                     
-                     conditionalPanel("input.T_2 == 'custom'", 
-                                      textInput(inputId = "T_2.custom", label = "f(x)", value = "sum(x) / length(x)"))
                    )
+                   
           ), 
           
           tabPanel("Resamples", 
+                   
                    fluidPage(
+                     
                      numericInput(inputId = "R_1", label = HTML("$$ R_1 $$"), value = 1000, min = 1, max = 10000), 
                      
-                     br(), br(), 
+                     conditionalPanel("input.n_pop == 'two'", 
+                                      br(), br(), 
+                                      numericInput(inputId = "R_2", label = HTML("$$ R_2 $$"), value = 1000, min = 1, max = 10000)
+                     )
                      
-                     numericInput(inputId = "R_2", label = HTML("$$ R_2 $$"), value = 1000, min = 1, max = 10000)
                    )
+                   
           ), 
           
           tabPanel("Plot", 
+                   
                    fluidPage(
+                     
                      fluidRow(
                        column(numericInput(inputId = "plot.xmin", label = "From", value = -4), width = 6),
                        column(numericInput(inputId = "plot.xmax", label = "To", value =  4), width = 6)
@@ -215,57 +279,19 @@ ui <- fluidPage(
                      conditionalPanel("input.n_vlines > 2", 
                                       numericInput(inputId = "vline3", label = "vline 3", value = 0))
                    )
+                   
           )
+          
         )
-      ), width = 3
+        
+      ), width = 4
+      
     ), 
     
-    mainPanel(
-      splitLayout(
-        
-        fluidPage(
-          fluidRow(
-            column(plotOutput(outputId = "pop_1_plot", height = 200), width = 8), 
-            br(), 
-            column(verbatimTextOutput(outputId = "pop_1_descriptives"), width = 4)
-          ), 
-        
-          fluidRow(
-            column(plotOutput(outputId = "sample_1_plot", height = 200), width = 8), 
-            br(), 
-            column(verbatimTextOutput(outputId = "sample_1_descriptives"), width = 4)
-          ), 
-        
-          fluidRow(
-            column(plotOutput(outputId = "bootstrap_1_plot", height = 200), width = 8), 
-            br(), 
-            column(verbatimTextOutput(outputId = "bootstrap_1_descriptives"), width = 4)
-          )
-        ), 
-        
-        fluidPage(
-          fluidRow(
-            column(plotOutput(outputId = "pop_2_plot", height = 200), width = 8), 
-            br(), 
-            column(verbatimTextOutput(outputId = "pop_2_descriptives"), width = 4)
-          ), 
-          
-          fluidRow(
-            column(plotOutput(outputId = "sample_2_plot", height = 200), width = 8), 
-            br(), 
-            column(verbatimTextOutput(outputId = "sample_2_descriptives"), width = 4)
-          ), 
-          
-          fluidRow(
-            column(plotOutput(outputId = "bootstrap_2_plot", height = 200), width = 8), 
-            br(), 
-            column(verbatimTextOutput(outputId = "bootstrap_2_descriptives"), width = 4)
-          )
-        )
-        
-      ), width = 9
-    )
+    mainPanel(uiOutput(outputId = "plots"), width = 8)
+    
   )
+  
 )
 
 server <- function(input, output, session) {
@@ -296,7 +322,7 @@ server <- function(input, output, session) {
     updateNumericInput(session, "T_2.order", "order", value = new_value, min = 1, max = new_max, step = 1)
   })
   
-  ## vlines
+  # vlines
   vlines <- reactive({
     switch(input$n_vlines, 
            "0" = geom_blank(), 
@@ -307,8 +333,12 @@ server <- function(input, output, session) {
   
   
   
+  
+  
+  
   ##### DISTRIBUTION FUNCTIONS #####
   
+  # population 1
   ddist_1 <- reactive({
     switch(input$pop_1, 
            "beta" =        function(x) dbeta(x, shape1 = input$pop_1_beta_shape1, shape2 = input$pop_1_beta_shape2), 
@@ -351,6 +381,7 @@ server <- function(input, output, session) {
            "uniform" =     function(n) runif(n, min = input$pop_1_unif_min, max = input$pop_1_unif_max))
   })
 
+  # population 2
   ddist_2 <- reactive({
     switch(input$pop_2, 
            "beta" =        function(x) dbeta(x, shape1 = input$pop_2_beta_shape1, shape2 = input$pop_2_beta_shape2), 
@@ -400,7 +431,10 @@ server <- function(input, output, session) {
   
   ##### POPULATION #####
   
+  # popuation 1
   output$pop_1_plot <- renderPlot({
+    input$n_pop
+    
     ggplot() + 
       switch(input$pop_1, 
              "poisson" = geom_step(aes(x = x, y = y), 
@@ -422,8 +456,8 @@ server <- function(input, output, session) {
       vlines()
   })
 
-  # calculate population descriptive statistics such as mean, median, and standard deviation
-  # these are reported as well as used to construct some bootstrap samples (e.g., mad or t)
+  ## calculate population descriptive statistics such as mean, median, and standard deviation
+  ## these are reported as well as used to construct some bootstrap samples (e.g., mad or t)
   pop_1_descriptives <- reactive({
     switch(input$pop_1, 
            "beta" =        sbeta(input$pop_1_beta_shape1, input$pop_1_beta_shape2), 
@@ -440,11 +474,15 @@ server <- function(input, output, session) {
   })
   
   output$pop_1_descriptives <- renderPrint({
+    input$n_pop
     vectxt <- paste(names(pop_1_descriptives()), "=", format(round(pop_1_descriptives(), 2), nsmall = 2))
     cat(paste(vectxt, collapse = "\n"))
   })
 
+  # population 2
   output$pop_2_plot <- renderPlot({
+    input$n_pop
+    
     ggplot() + 
       switch(input$pop_2, 
              "poisson" = geom_step(aes(x = x, y = y), 
@@ -466,8 +504,8 @@ server <- function(input, output, session) {
       vlines()
   })
   
-  # calculate population descriptive statistics such as mean, median, and standard deviation
-  # these are reported as well as used to construct some bootstrap samples (e.g., mad or t)
+  ## calculate population descriptive statistics such as mean, median, and standard deviation
+  ## these are reported as well as used to construct some bootstrap samples (e.g., mad or t)
   pop_2_descriptives <- reactive({
     switch(input$pop_2, 
            "beta" =        sbeta(input$pop_2_beta_shape1, input$pop_2_beta_shape2), 
@@ -484,6 +522,7 @@ server <- function(input, output, session) {
   })
   
   output$pop_2_descriptives <- renderPrint({
+    input$n_pop
     vectxt <- paste(names(pop_2_descriptives()), "=", format(round(pop_2_descriptives(), 2), nsmall = 2))
     cat(paste(vectxt, collapse = "\n"))
   })
@@ -495,11 +534,14 @@ server <- function(input, output, session) {
     
   ##### SAMPLE #####
   
+  # sample 1
   sample_1_draws <- reactive({
     rdist_1()(input$n_1)
   })
   
   output$sample_1_plot <- renderPlot({
+    input$n_pop
+    
     ggplot(tibble(sample_1_draws()), aes(x = sample_1_draws())) + 
       geom_histogram(fill = "#337ab7") + 
       labs(title = "Sample 1", x = "") + 
@@ -513,15 +555,19 @@ server <- function(input, output, session) {
   })
   
   output$sample_1_descriptives <- renderPrint({
+    input$n_pop
     vectxt <- paste(names(sample_1_descriptives()), "=", format(round(sample_1_descriptives(), 2), nsmall = 2))
     cat(paste(vectxt, collapse = "\n"))
   })
   
+  # sample 2
   sample_2_draws <- reactive({
     rdist_2()(input$n_2)
   })
   
   output$sample_2_plot <- renderPlot({
+    input$n_pop
+    
     ggplot(tibble(sample_2_draws()), aes(x = sample_2_draws())) + 
       geom_histogram(fill = "#337ab7") + 
       labs(title = "Sample 2", x = "") + 
@@ -535,14 +581,19 @@ server <- function(input, output, session) {
   })
   
   output$sample_2_descriptives <- renderPrint({
+    input$n_pop
     vectxt <- paste(names(sample_2_descriptives()), "=", format(round(sample_2_descriptives(), 2), nsmall = 2))
     cat(paste(vectxt, collapse = "\n"))
   })
   
   
   
-  ##### BOOTSTRAP 1 #####
   
+  
+  
+  ##### BOOTSTRAP #####
+  
+  # bootstrap 1
   bootstrap_1_draws <- reactive({
     statistic_1 <- switch(input$T_1, 
                           "mean" =   function(x) mean(x, trim = input$T_1.trim), 
@@ -606,6 +657,8 @@ server <- function(input, output, session) {
   })
   
   output$bootstrap_1_plot <- renderPlot({
+    input$n_pop
+    
     ggplot(tibble(bootstrap_1_draws()), aes(x = bootstrap_1_draws())) + 
       geom_histogram(fill = "#337ab7") + 
       labs(title = "Bootstrap Sampling Distribution 1", x = "") + 
@@ -619,14 +672,14 @@ server <- function(input, output, session) {
   })
   
   output$bootstrap_1_descriptives <- renderPrint({
+    input$n_pop
     vectxt <- paste(names(bootstrap_1_descriptives()), "=", format(round(bootstrap_1_descriptives(), 2), nsmall = 2))
     cat(paste(vectxt, collapse = "\n"))
   })
   
   
   
-  ##### BOOTSTRAP 2 #####
-  
+  # bootstrap 2
   bootstrap_2_draws <- reactive({
     statistic_2 <- switch(input$T_2, 
                           "mean" =   function(x) mean(x, trim = input$T_2.trim), 
@@ -690,6 +743,8 @@ server <- function(input, output, session) {
   })
   
   output$bootstrap_2_plot <- renderPlot({
+    input$n_pop
+    
     ggplot(tibble(bootstrap_2_draws()), aes(x = bootstrap_2_draws())) + 
       geom_histogram(fill = "#337ab7") + 
       labs(title = "Boostrap Sampling Distribution 2", x = "") + 
@@ -703,9 +758,83 @@ server <- function(input, output, session) {
   })
   
   output$bootstrap_2_descriptives <- renderPrint({
+    input$n_pop
     vectxt <- paste(names(bootstrap_2_descriptives()), "=", format(round(bootstrap_2_descriptives(), 2), nsmall = 2))
     cat(paste(vectxt, collapse = "\n"))
   })
+  
+  
+  
+  
+  
+  ##### PLOT OUTPUT #####
+  output$plots <- renderUI({
+    if (input$n_pop == "one") {
+      fluidRow(
+        column(12,
+          fluidRow(
+            column(8, plotOutput(outputId = "pop_1_plot", height = 200)),
+            column(4, br(), verbatimTextOutput(outputId = "pop_1_descriptives"))
+          ),
+          
+          fluidRow(
+            column(8, plotOutput(outputId = "sample_1_plot", height = 200)),
+            column(4, br(), verbatimTextOutput(outputId = "sample_1_descriptives"))
+          ),
+          
+          fluidRow(
+            column(8, plotOutput(outputId = "bootstrap_1_plot", height = 200)),
+            column(4, br(), verbatimTextOutput(outputId = "bootstrap_1_descriptives"))
+          )
+          
+        )
+      )
+    } else {
+      fluidRow(
+        column(6,
+               fluidRow(
+                 column(8, plotOutput(outputId = "pop_1_plot", height = 200)),
+                 column(4, br(), verbatimTextOutput(outputId = "pop_1_descriptives"))
+               ),
+               
+               fluidRow(
+                 column(8, plotOutput(outputId = "sample_1_plot", height = 200)),
+                 column(4, br(), verbatimTextOutput(outputId = "sample_1_descriptives"))
+               ),
+               
+               fluidRow(
+                 column(8, plotOutput(outputId = "bootstrap_1_plot", height = 200)),
+                 column(4, br(), verbatimTextOutput(outputId = "bootstrap_1_descriptives"))
+               )
+               
+        ), 
+        
+        column(6,
+               fluidRow(
+                 column(8, plotOutput(outputId = "pop_2_plot", height = 200)),
+                 column(4, br(), verbatimTextOutput(outputId = "pop_2_descriptives"))
+               ),
+               
+               fluidRow(
+                 column(8, plotOutput(outputId = "sample_2_plot", height = 200)),
+                 column(4, br(), verbatimTextOutput(outputId = "sample_2_descriptives"))
+               ),
+               
+               fluidRow(
+                 column(8, plotOutput(outputId = "bootstrap_2_plot", height = 200)),
+                 column(4, br(), verbatimTextOutput(outputId = "bootstrap_2_descriptives"))
+               )
+               
+        )
+        
+      )
+    }
+  })
 }
+
+
+
+
+
 
 shinyApp(ui, server)
