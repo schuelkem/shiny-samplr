@@ -433,8 +433,6 @@ server <- function(input, output, session) {
   
   # popuation 1
   output$pop_1_plot <- renderPlot({
-    input$n_pop
-    
     ggplot() + 
       switch(input$pop_1, 
              "poisson" = geom_step(aes(x = x, y = y), 
@@ -474,15 +472,12 @@ server <- function(input, output, session) {
   })
   
   output$pop_1_descriptives <- renderPrint({
-    input$n_pop
     vectxt <- paste(names(pop_1_descriptives()), "=", format(round(pop_1_descriptives(), 2), nsmall = 2))
     cat(paste(vectxt, collapse = "\n"))
   })
 
   # population 2
   output$pop_2_plot <- renderPlot({
-    input$n_pop
-    
     ggplot() + 
       switch(input$pop_2, 
              "poisson" = geom_step(aes(x = x, y = y), 
@@ -522,7 +517,6 @@ server <- function(input, output, session) {
   })
   
   output$pop_2_descriptives <- renderPrint({
-    input$n_pop
     vectxt <- paste(names(pop_2_descriptives()), "=", format(round(pop_2_descriptives(), 2), nsmall = 2))
     cat(paste(vectxt, collapse = "\n"))
   })
@@ -540,8 +534,6 @@ server <- function(input, output, session) {
   })
   
   output$sample_1_plot <- renderPlot({
-    input$n_pop
-    
     ggplot(tibble(sample_1_draws()), aes(x = sample_1_draws())) + 
       geom_histogram(fill = "#337ab7") + 
       labs(title = "Sample 1", x = "") + 
@@ -555,7 +547,6 @@ server <- function(input, output, session) {
   })
   
   output$sample_1_descriptives <- renderPrint({
-    input$n_pop
     vectxt <- paste(names(sample_1_descriptives()), "=", format(round(sample_1_descriptives(), 2), nsmall = 2))
     cat(paste(vectxt, collapse = "\n"))
   })
@@ -566,8 +557,6 @@ server <- function(input, output, session) {
   })
   
   output$sample_2_plot <- renderPlot({
-    input$n_pop
-    
     ggplot(tibble(sample_2_draws()), aes(x = sample_2_draws())) + 
       geom_histogram(fill = "#337ab7") + 
       labs(title = "Sample 2", x = "") + 
@@ -581,7 +570,6 @@ server <- function(input, output, session) {
   })
   
   output$sample_2_descriptives <- renderPrint({
-    input$n_pop
     vectxt <- paste(names(sample_2_descriptives()), "=", format(round(sample_2_descriptives(), 2), nsmall = 2))
     cat(paste(vectxt, collapse = "\n"))
   })
@@ -657,8 +645,6 @@ server <- function(input, output, session) {
   })
   
   output$bootstrap_1_plot <- renderPlot({
-    input$n_pop
-    
     ggplot(tibble(bootstrap_1_draws()), aes(x = bootstrap_1_draws())) + 
       geom_histogram(fill = "#337ab7") + 
       labs(title = "Bootstrap Sampling Distribution 1", x = "") + 
@@ -672,7 +658,6 @@ server <- function(input, output, session) {
   })
   
   output$bootstrap_1_descriptives <- renderPrint({
-    input$n_pop
     vectxt <- paste(names(bootstrap_1_descriptives()), "=", format(round(bootstrap_1_descriptives(), 2), nsmall = 2))
     cat(paste(vectxt, collapse = "\n"))
   })
@@ -743,8 +728,6 @@ server <- function(input, output, session) {
   })
   
   output$bootstrap_2_plot <- renderPlot({
-    input$n_pop
-    
     ggplot(tibble(bootstrap_2_draws()), aes(x = bootstrap_2_draws())) + 
       geom_histogram(fill = "#337ab7") + 
       labs(title = "Boostrap Sampling Distribution 2", x = "") + 
@@ -758,7 +741,6 @@ server <- function(input, output, session) {
   })
   
   output$bootstrap_2_descriptives <- renderPrint({
-    input$n_pop
     vectxt <- paste(names(bootstrap_2_descriptives()), "=", format(round(bootstrap_2_descriptives(), 2), nsmall = 2))
     cat(paste(vectxt, collapse = "\n"))
   })

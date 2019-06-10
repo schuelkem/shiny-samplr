@@ -1,0 +1,13 @@
+name: shiny-samplr
+title: shiny-samplr
+username:
+account: matthew-schuelke
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 971280
+bundleId: 2138798
+url: https://matthew-schuelke.shinyapps.io/shiny-samplr/
+when: 1559945608.4844
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: faster_sampler.R|LICENSE|README.md|README.Rmd|img/hexSticker.png|img/hexSticker.R|img/hexSticker_small.png|img/run_app_button.png|img/slu.png
